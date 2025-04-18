@@ -15,6 +15,9 @@ import com.tkuimwd.model.ChessModel;
 import com.tkuimwd.model.PlayerModel;
 import com.tkuimwd.type.Role;
 
+import javafx.geometry.Point2D;
+import javafx.scene.input.MouseEvent;
+
 public class Main extends GameApplication {
 
     private static final int HEIGHT = 678;
@@ -30,6 +33,7 @@ public class Main extends GameApplication {
 
     @Override
     protected void initGame() {
+        // initMouseTracker();
         FXGL.getGameWorld().addEntityFactory(new BackgroundFactory());
         FXGL.getGameWorld().addEntityFactory(new PlayerFactory());
         FXGL.getGameWorld().addEntityFactory(new FootBallFactory());
@@ -39,12 +43,38 @@ public class Main extends GameApplication {
         FXGL.spawn("FootBall", new SpawnData(WIDTH / 2 + 1, HEIGHT / 2 + 7).put("footBallModel", new FootBallModel()));
         FXGL.spawn("Chess", new SpawnData(160, HEIGHT / 2 + 3).put("chessModel", new ChessModel(Role.PLAYER1)));
         FXGL.spawn("Chess", new SpawnData(850, HEIGHT / 2 + 3).put("chessModel", new ChessModel(Role.PLAYER2)));
+
+        
     }
 
     @Override
     protected void initInput() {
 
     }
+
+    @Override
+    protected void initPhysics() {
+        FXGL.getPhysicsWorld().setGravity(0, 0);
+    }
+
+    // private void initMouseTracker() {
+    //     // 把根節點的滑鼠移動事件綁定起來
+    //     FXGL.getGameScene().getRoot().addEventHandler(
+    //             MouseEvent.MOUSE_MOVED,
+    //             e -> {
+    //                 // 場景座標
+    //                 double sceneX = e.getX();
+    //                 double sceneY = e.getY();
+
+    //                 // 世界座標（如果你有攝影機 / viewport）
+    //                 Point2D world = FXGL.getInput().getMousePositionWorld();
+    //                 double worldX = world.getX();
+    //                 double worldY = world.getY();
+
+    //                 System.out.printf("scene=(%.1f,%.1f)  world=(%.1f,%.1f)%n",
+    //                         sceneX, sceneY, worldX, worldY);
+    //             });
+    // }
 
     public static void main(String[] args) {
         launch(args);

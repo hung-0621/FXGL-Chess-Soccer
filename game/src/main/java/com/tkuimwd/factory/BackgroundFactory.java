@@ -8,6 +8,10 @@ import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import com.almasb.fxgl.entity.components.IrremovableComponent;
+import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.physics.box2d.dynamics.BodyDef;
+import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
+import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
