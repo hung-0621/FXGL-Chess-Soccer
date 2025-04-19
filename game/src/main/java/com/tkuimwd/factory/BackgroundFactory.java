@@ -25,23 +25,36 @@ public class BackgroundFactory implements EntityFactory {
 
         BackgroundModel backgroundModel = data.get("backgroundModel");
         ImageView background = setView(backgroundModel);
+        PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
                 .view(background)
-                .with(new IrremovableComponent())
+                .with(physics, new IrremovableComponent())
                 .zIndex(-100)
                 .build();
     }
 
-    public ImageView setView(BackgroundModel backgroundModel){
+    public ImageView setView(BackgroundModel backgroundModel) {
         String backgroundImagePath = backgroundModel.get_background_image_path();
         InputStream input = getClass().getResourceAsStream(backgroundImagePath);
-        if(input == null){
+        if (input == null) {
             throw new IllegalStateException("找不到資源：" + backgroundImagePath);
         }
         Image backgroundImage = new Image(input);
         ImageView background = new ImageView(backgroundImage);
         background.preserveRatioProperty().set(true);
         return background;
+    }
+
+    private PhysicsComponent setPhysics() {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setFixtureDef(new FixtureDef()
+                .restitution(0.8f)
+                .friction(0f)
+                .density(0f));
+        BodyDef bd = new BodyDef();
+        bd.setType(BodyType.STATIC);
+        physics.setBodyDef(bd);
+        return physics;
     }
 }

@@ -1,8 +1,8 @@
 package com.tkuimwd.factory;
 
 import com.tkuimwd.type.Role;
+import com.tkuimwd.component.ChessComponent;
 import com.tkuimwd.model.ChessModel;
-
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.EntityFactory;
@@ -21,19 +21,19 @@ public class ChessFactory implements EntityFactory {
 
     @Spawns("Chess")
     public Entity spawnPlayer1(SpawnData data) {
-        ChessModel chessModel = data.get("chessModel");
-        Circle chess = setView(chessModel);
+        ChessModel model = data.get("chessModel");
+        Circle view = setView(model);
         PhysicsComponent physics = setPhysics();
+        ChessComponent chessComponent = new ChessComponent();
 
         return FXGL.entityBuilder(data)
-                .view(chess)
-                .with(new IrremovableComponent())
-                .with(physics)
+                .viewWithBBox(view)
+                .with(physics, chessComponent, new IrremovableComponent())
                 .collidable()
                 .build();
     }
 
-    public Circle setView(ChessModel chessModel) {
+    private Circle setView(ChessModel chessModel) {
         Circle chess = new Circle(chessModel.getSize());
         chess.setFill(chessModel.getRole() == Role.PLAYER1 ? Color.BLUE : Color.RED);
         chess.setStroke(Color.WHITE);
@@ -41,14 +41,16 @@ public class ChessFactory implements EntityFactory {
         return chess;
     }
 
-    public PhysicsComponent setPhysics(){
+    private PhysicsComponent setPhysics() {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
-            .restitution(0.5f)
-            .friction(0.5f)
-            .density(0.1f));
+                .restitution(0.5f)
+                .friction(0.5f)
+                .density(1f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);
+        bd.setFixedRotation(true);
+        bd.setLinearDamping(0.3f);
         physics.setBodyDef(bd);
         return physics;
     }

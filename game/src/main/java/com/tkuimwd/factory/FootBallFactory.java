@@ -38,9 +38,11 @@ public class FootBallFactory implements EntityFactory {
         physics.setFixtureDef(new FixtureDef()
             .restitution(0.5f)
             .friction(0.5f)
-            .density(0.1f));
+            .density(0.5f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);
+        bd.setFixedRotation(true);
+        bd.setLinearDamping(0.3f);
         physics.setBodyDef(bd);
         return physics;
     }

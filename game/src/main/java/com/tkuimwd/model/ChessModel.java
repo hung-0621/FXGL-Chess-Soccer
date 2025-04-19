@@ -4,17 +4,24 @@ import com.tkuimwd.type.Role;
 
 public class ChessModel {
 
+    private int x;
+    private int y;
     private Role role;
-    private int size = 20;
+    private int size;
 
-    public ChessModel(Role role){
+    public ChessModel(int x, int y, Role role){
+        this.x = x;
+        this.y = y;
         this.role = role;
-
+        this.size = 20; // Default size
     }
 
-    public ChessModel(Role role, int size){
-        this.role = role;
-        this.size = size;
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     public Role getRole() {
