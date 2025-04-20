@@ -36,13 +36,13 @@ public class Main extends GameApplication {
     @Override
     protected void initGame() {
         // initMouseTracker();
-        
-        double[][] edges = {
+        // wall edges
+        double[][] wallEdges = {
                 { 61, 54 }, { 61, 254 }, { 29, 254 }, { 29, 433 },
                 { 61, 433 }, { 61, 651 }, { 958, 651 }, { 958, 433 },
                 { 991, 433 }, { 991, 254 }, { 958, 254 }, { 958, 54 },
         };
-
+        // background image path
         String backgroundImagePath = "/field.jpg";
 
         // Factory
@@ -54,7 +54,7 @@ public class Main extends GameApplication {
 
         // Model
         BackgroundModel backgroundModel = new BackgroundModel(backgroundImagePath);
-        WallModel wallModel = new WallModel(edges);
+        WallModel wallModel = new WallModel(wallEdges);
         FootBallModel footBallModel = new FootBallModel(WIDTH / 2 - 1, HEIGHT / 2 + 13);
         ChessModel chessModel1 = new ChessModel(160, HEIGHT / 2 + 7, Role.PLAYER1);
         ChessModel chessModel2 = new ChessModel(850, HEIGHT / 2 + 7, Role.PLAYER2);
