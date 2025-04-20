@@ -51,8 +51,8 @@ public class BackgroundFactory implements EntityFactory {
     private PhysicsComponent setPhysics() {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
-                .restitution(0.8f)
-                .friction(0f)
+                .restitution(0f)
+                .friction(1f)
                 .density(0f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.STATIC);

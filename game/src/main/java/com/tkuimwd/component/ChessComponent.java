@@ -14,8 +14,9 @@ public class ChessComponent extends Component {
 
     private Point2D start;
     private Point2D end;
+    private Point2D speed;
     private PhysicsComponent physics;
-    private Circle view;
+    private Circle chess;
     private double maxForce;
     private double maxDistance;
 
@@ -27,10 +28,17 @@ public class ChessComponent extends Component {
     @Override
     public void onAdded() {
         physics = getEntity().getComponent(PhysicsComponent.class);
+        chess = (Circle) getEntity().getViewComponent().getChildren().get(0);
+        chess.setOnMousePressed(e -> onPress(e));
+        chess.setOnMouseReleased(e -> onRelease(e));
+    }
 
-        view = (Circle) getEntity().getViewComponent().getChildren().get(0);
-        view.setOnMousePressed(e -> onPress(e));
-        view.setOnMouseReleased(e -> onRelease(e));
+    @Override
+    public void onUpdate(double tpf) {
+        speed = physics.getLinearVelocity();
+        if(speed.magnitude() > 0 && speed.magnitude() < 30){
+            physics.setLinearVelocity(Point2D.ZERO);
+        }
     }
 
     public void onPress(MouseEvent event) {
@@ -38,7 +46,7 @@ public class ChessComponent extends Component {
         chess.setStroke(Color.YELLOW);
 
         this.start = getEntity().getPosition();
-        System.out.println("Mouse Pressed on Chess: ( " + start.getX() + ", " + start.getY() + " )");
+        // System.out.println("Mouse Pressed on Chess: ( " + start.getX() + ", " + start.getY() + " )");
     }
 
     public void onRelease(MouseEvent event) {
@@ -54,8 +62,8 @@ public class ChessComponent extends Component {
         // 方向跟衝量
         Point2D direction = start.subtract(end).normalize();
         Point2D impulse = direction.multiply(force);
-        System.out.println("Mouse Released on Chess: ( " + end.getX() + ", " + end.getY() + " )");
-        System.out.println("Impulse: ( " + impulse.getX() + ", " + impulse.getY() + " )");
+        // System.out.println("Mouse Released on Chess: ( " + end.getX() + ", " + end.getY() + " )");
+        // System.out.println("Impulse: ( " + impulse.getX() + ", " + impulse.getY() + " )");
 
         Vec2 centerVec = physics.getBody().getWorldCenter();
         Point2D center = new Point2D(centerVec.x, centerVec.y);
@@ -64,6 +72,12 @@ public class ChessComponent extends Component {
                 impulse,
                 center,
                 true);
+    }
+
+    public void onMove(Point2D point){
+        if(speed.getX() < 5 && speed.getY() < 5){
+
+        }
     }
 
 }

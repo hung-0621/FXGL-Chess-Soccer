@@ -37,13 +37,14 @@ public class Main extends GameApplication {
     protected void initGame() {
         // initMouseTracker();
         // wall edges
-        double[][] wallEdges = {
+        final double[][] wallEdges = {
                 { 61, 54 }, { 61, 254 }, { 29, 254 }, { 29, 433 },
                 { 61, 433 }, { 61, 651 }, { 958, 651 }, { 958, 433 },
                 { 991, 433 }, { 991, 254 }, { 958, 254 }, { 958, 54 },
         };
+        
         // background image path
-        String backgroundImagePath = "/field.jpg";
+        final String backgroundImagePath = "/field.jpg";
 
         // Factory
         FXGL.getGameWorld().addEntityFactory(new BackgroundFactory());

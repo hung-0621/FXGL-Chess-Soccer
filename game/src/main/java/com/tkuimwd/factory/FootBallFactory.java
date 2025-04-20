@@ -12,6 +12,7 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyDef;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
+import com.tkuimwd.component.FootBallComponent;
 import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.type.EntityType;
 
@@ -24,6 +25,7 @@ public class FootBallFactory implements EntityFactory {
     public Entity spawnSuccer(SpawnData data) {
 
         FootBallModel model = data.get("footBallModel");
+        FootBallComponent component = new FootBallComponent();
         double size = model.getSize();
         Circle footBall = setView();
         PhysicsComponent physics = setPhysics();
@@ -32,7 +34,7 @@ public class FootBallFactory implements EntityFactory {
                 .type(EntityType.FOOTBALL)
                 .view(footBall)
                 .bbox(new HitBox(new Point2D(-size, -size), BoundingShape.circle(size)))
-                .with(physics, new IrremovableComponent())
+                .with(physics, component, new IrremovableComponent())
                 .collidable()
                 .build();
     }
@@ -49,7 +51,7 @@ public class FootBallFactory implements EntityFactory {
         physics.setFixtureDef(new FixtureDef()
                 .restitution(0.5f)
                 .friction(0.5f)
-                .density(0.5f));
+                .density(0.8f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);
         bd.setFixedRotation(true);

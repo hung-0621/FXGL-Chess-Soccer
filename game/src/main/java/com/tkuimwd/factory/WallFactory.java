@@ -41,8 +41,8 @@ public class WallFactory implements EntityFactory {
         physics.setBodyDef(bd);
 
         FixtureDef fd = new FixtureDef()
-                .friction(1.0f)
-                .restitution(0f)
+                .restitution(1f)
+                .friction(0f)
                 .density(0f);
         physics.setFixtureDef(fd);
         return physics;
