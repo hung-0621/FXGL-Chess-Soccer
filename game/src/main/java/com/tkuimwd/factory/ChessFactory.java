@@ -1,5 +1,6 @@
 package com.tkuimwd.factory;
 
+import com.tkuimwd.type.EntityType;
 import com.tkuimwd.type.Role;
 import com.tkuimwd.component.ChessComponent;
 import com.tkuimwd.model.ChessModel;
@@ -27,6 +28,7 @@ public class ChessFactory implements EntityFactory {
         ChessComponent chessComponent = new ChessComponent();
 
         return FXGL.entityBuilder(data)
+                .type(EntityType.CHESS)
                 .viewWithBBox(view)
                 .with(physics, chessComponent, new IrremovableComponent())
                 .collidable()

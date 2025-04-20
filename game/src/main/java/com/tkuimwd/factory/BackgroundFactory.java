@@ -17,6 +17,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import com.tkuimwd.model.BackgroundModel;
+import com.tkuimwd.type.EntityType;
 
 public class BackgroundFactory implements EntityFactory {
 
@@ -28,6 +29,7 @@ public class BackgroundFactory implements EntityFactory {
         PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
+                .type(EntityType.BACKGROUND)
                 .view(background)
                 .with(physics, new IrremovableComponent())
                 .zIndex(-100)

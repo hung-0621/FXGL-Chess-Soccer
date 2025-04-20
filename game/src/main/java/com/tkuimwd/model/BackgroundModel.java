@@ -8,6 +8,10 @@ public class BackgroundModel{
         this.backgroundImagePath = "/field.jpg";
     }
 
+    public BackgroundModel(String backgroundImagePath){
+        this.backgroundImagePath = backgroundImagePath;
+    }
+
     public String get_background_image_path(){
         return backgroundImagePath;
     }

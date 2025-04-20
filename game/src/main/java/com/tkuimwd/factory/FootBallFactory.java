@@ -10,6 +10,7 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyDef;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
+import com.tkuimwd.type.EntityType;
 
 import javafx.scene.shape.Circle;
 
@@ -21,6 +22,7 @@ public class FootBallFactory implements EntityFactory {
         PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
+                .type(EntityType.FOOTBALL)
                 .viewWithBBox(footBall)
                 .with(new IrremovableComponent())
                 .with(physics)
