@@ -14,11 +14,15 @@ import com.tkuimwd.model.BackgroundModel;
 import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.model.WallModel;
 import com.tkuimwd.model.ChessModel;
+import com.tkuimwd.model.ScoreBoard;
 import com.tkuimwd.type.Role;
 
 import javafx.geometry.Point2D;
-import javafx.scene.effect.Light.Point;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;;
 
 public class Main extends GameApplication {
 
@@ -32,6 +36,25 @@ public class Main extends GameApplication {
         settings.setTitle("TKUIMWD");
         settings.setVersion("v1.0");
         settings.setDeveloperMenuEnabled(true);
+        settings.setMainMenuEnabled(true);
+    }
+
+    @Override
+    protected void initUI() {
+        // score board
+        ScoreBoard scoreBoard = new ScoreBoard();
+        Label p1_score = new Label("P1: " + scoreBoard.getScore(Role.PLAYER1));
+        Label p2_score = new Label("P2: " + scoreBoard.getScore(Role.PLAYER2));
+        Label vs = new Label(" VS ");
+        // main
+        HBox pane = new HBox();
+        pane.setSpacing(10);
+        pane.setMinSize(WIDTH, 70);
+        pane.setAlignment(Pos.CENTER);
+        pane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-font-size: 20;");
+        pane.getChildren().addAll(p1_score, vs, p2_score);
+
+        FXGL.addUINode(pane, 0, 0);
     }
 
     @Override

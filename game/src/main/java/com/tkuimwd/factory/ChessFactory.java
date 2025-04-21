@@ -53,12 +53,12 @@ public class ChessFactory implements EntityFactory {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
                 .restitution(0.5f)
-                .friction(0f)
+                .friction(0.5f)
                 .density(1f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);
         bd.setFixedRotation(true);
-        bd.setLinearDamping(0.3f);
+        bd.setLinearDamping(0.2f);
         physics.setBodyDef(bd);
         return physics;
     }

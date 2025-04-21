@@ -3,8 +3,8 @@ package com.tkuimwd;
 import javafx.geometry.Point2D;
 
 public class Config {
-    static final int HEIGHT = 678 + 70; // 遊戲場景高度 scene + board
-    static final int WIDTH = 1024; // 遊戲場景寬度
+    static final int HEIGHT = 748; // 遊戲場景高度 scene + board
+    static final int WIDTH = 1020; // 遊戲場景寬度
     static final String TITLE = "Chess Soccer"; // 遊戲標題
     
     // background init
