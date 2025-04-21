@@ -2,26 +2,26 @@ package com.tkuimwd.model;
 
 import com.tkuimwd.type.Role;
 
+import javafx.geometry.Point2D;
+
 public class ChessModel {
 
-    private int x;
-    private int y;
+    private Point2D point;
     private Role role;
     private int size;
 
-    public ChessModel(int x, int y, Role role){
-        this.x = x;
-        this.y = y;
+    public ChessModel(Point2D point, Role role){
+        this.point = point;
         this.role = role;
         this.size = 20; // Default size
     }
 
-    public int getX() {
-        return x;
+    public double getX() {
+        return point.getX();
     }
 
-    public int getY() {
-        return y;
+    public double getY() {
+        return point.getY();
     }
 
     public Role getRole() {

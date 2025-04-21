@@ -17,12 +17,13 @@ import com.tkuimwd.model.ChessModel;
 import com.tkuimwd.type.Role;
 
 import javafx.geometry.Point2D;
+import javafx.scene.effect.Light.Point;
 import javafx.scene.input.MouseEvent;
 
 public class Main extends GameApplication {
 
-    private static final int HEIGHT = 678;
-    private static final int WIDTH = 1024;
+    private static final int HEIGHT = Config.HEIGHT;
+    private static final int WIDTH = Config.WIDTH;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -35,18 +36,18 @@ public class Main extends GameApplication {
 
     @Override
     protected void initGame() {
-        // initMouseTracker();
-        // wall edges
-        final double[][] wallEdges = {
-                { 61, 54 }, { 61, 254 }, { 29, 254 }, { 29, 433 },
-                { 61, 433 }, { 61, 651 }, { 958, 651 }, { 958, 433 },
-                { 991, 433 }, { 991, 254 }, { 958, 254 }, { 958, 54 },
-        };
-        
-        // background image path
-        final String backgroundImagePath = "/field.jpg";
+        initMouseTracker();
 
-        // Factory
+        // config
+        final double[][] WALL_EDGES = Config.WALL_EDGES;
+        final String IMAGE_PATH = Config.IMAGE_PATH;
+        final Point2D BACKGROUND_POSITION = Config.BACKGROUND_POSITION;
+        final Point2D WALL_POSITION = Config.WALL_POSITION;
+        final Point2D FOOTBALL_POSITION = Config.FOOTBALL_POSITION;
+        final Point2D[] P1_CHESS_POSITION = Config.P1_CHESS_POSITION;
+        final Point2D[] P2_CHESS_POSITION = Config.P2_CHESS_POSITION;
+
+        // Factorys
         FXGL.getGameWorld().addEntityFactory(new BackgroundFactory());
         FXGL.getGameWorld().addEntityFactory(new WallFactory());
         FXGL.getGameWorld().addEntityFactory(new PlayerFactory());
@@ -54,19 +55,33 @@ public class Main extends GameApplication {
         FXGL.getGameWorld().addEntityFactory(new ChessFactory());
 
         // Model
-        BackgroundModel backgroundModel = new BackgroundModel(backgroundImagePath);
-        WallModel wallModel = new WallModel(wallEdges);
-        FootBallModel footBallModel = new FootBallModel(WIDTH / 2 - 1, HEIGHT / 2 + 13);
-        ChessModel chessModel1 = new ChessModel(160, HEIGHT / 2 + 7, Role.PLAYER1);
-        ChessModel chessModel2 = new ChessModel(850, HEIGHT / 2 + 7, Role.PLAYER2);
+        BackgroundModel backgroundModel = new BackgroundModel(IMAGE_PATH);
+        WallModel wallModel = new WallModel(WALL_EDGES);
+        FootBallModel footBallModel = new FootBallModel(FOOTBALL_POSITION);
+        ChessModel[] p1_chess_model_list = new ChessModel[P1_CHESS_POSITION.length];
+        ChessModel[] p2_chess_model_list = new ChessModel[P2_CHESS_POSITION.length];
+
+        for (int i = 0; i < P1_CHESS_POSITION.length; i++) {
+            p1_chess_model_list[i] = new ChessModel(P1_CHESS_POSITION[i], Role.PLAYER1);
+        }
+
+        for (int i = 0; i < P2_CHESS_POSITION.length; i++) {
+            p2_chess_model_list[i] = new ChessModel(P2_CHESS_POSITION[i], Role.PLAYER2);
+        }
 
         // Spawn
-        FXGL.spawn("Background", new SpawnData(0, 0).put("backgroundModel", backgroundModel));
-        FXGL.spawn("Wall", new SpawnData(0, 0).put("wallModel", wallModel));
+        FXGL.spawn("Background", new SpawnData(BACKGROUND_POSITION).put("backgroundModel", backgroundModel));
+        FXGL.spawn("Wall", new SpawnData(WALL_POSITION).put("wallModel", wallModel));
         FXGL.spawn("FootBall",
                 new SpawnData(footBallModel.getX(), footBallModel.getY()).put("footBallModel", footBallModel));
-        FXGL.spawn("Chess", new SpawnData(chessModel1.getX(), chessModel1.getY()).put("chessModel", chessModel1));
-        FXGL.spawn("Chess", new SpawnData(chessModel2.getX(), chessModel2.getY()).put("chessModel", chessModel2));
+        for (int i = 0; i < p1_chess_model_list.length; i++) {
+            FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
+                    .put("chessModel", p1_chess_model_list[i]));
+        }
+        for (int i = 0; i < p2_chess_model_list.length; i++) {
+            FXGL.spawn("Chess", new SpawnData(p2_chess_model_list[i].getX(), p2_chess_model_list[i].getY())
+                    .put("chessModel", p2_chess_model_list[i]));
+        }
 
     }
 

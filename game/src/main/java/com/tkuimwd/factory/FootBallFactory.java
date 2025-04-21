@@ -50,7 +50,7 @@ public class FootBallFactory implements EntityFactory {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
                 .restitution(0.5f)
-                .friction(0.5f)
+                .friction(0f)
                 .density(0.8f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);

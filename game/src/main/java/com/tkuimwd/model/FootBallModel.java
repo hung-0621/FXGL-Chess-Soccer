@@ -1,32 +1,25 @@
 package com.tkuimwd.model;
 
+import javafx.geometry.Point2D;
+
 public class FootBallModel {
     
-    private int x;
-    private int y;
+    private Point2D position;
     private int size;
     private int speed;
 
-    public FootBallModel() {
-        this.x = 0;
-        this.y = 0;
+    public FootBallModel(Point2D position) {
+        this.position = position;
         this.size = 12; // Default size
         this.speed = 0;
     }
 
-    public FootBallModel(int x, int y) {
-        this.x = x;
-        this.y = y;
-        this.size = 12; // Default size
-        this.speed = 0;
+    public double getX() {
+        return position.getX();
     }
 
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
+    public double getY() {
+        return position.getY();
     }
 
     public int getSize() {
