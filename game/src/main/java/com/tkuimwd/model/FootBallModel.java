@@ -5,12 +5,12 @@ import javafx.geometry.Point2D;
 public class FootBallModel {
     
     private Point2D position;
-    private int size;
+    private int radius;
     private int speed;
 
     public FootBallModel(Point2D position) {
         this.position = position;
-        this.size = 12; // Default size
+        this.radius = 12; // Default radius
         this.speed = 0;
     }
 
@@ -22,8 +22,8 @@ public class FootBallModel {
         return position.getY();
     }
 
-    public int getSize() {
-        return size;
+    public int getRadius() {
+        return radius;
     }
 
     public int getSpeed() {

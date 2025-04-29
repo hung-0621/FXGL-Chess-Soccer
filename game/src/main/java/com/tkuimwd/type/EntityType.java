@@ -5,5 +5,6 @@ public enum EntityType {
     FOOTBALL,
     BACKGROUND,
     WALL,
-    PLAYER
+    PLAYER,
+    GOAL,
 }
