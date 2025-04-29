@@ -2,11 +2,11 @@ package com.tkuimwd.model;
 
 import com.tkuimwd.type.Role;
 
-public class ScoreBoard {
+public class ScoreBoardModel {
     private int p1_score;
     private int p2_score;
 
-    public ScoreBoard() {
+    public ScoreBoardModel() {
         this.p1_score = 0;
         this.p2_score = 0;
     }

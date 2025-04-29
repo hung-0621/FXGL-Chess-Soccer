@@ -39,4 +39,9 @@ public class Config {
             P2_CHESS_POSITION[i] = new Point2D(player2_chess_position[i][0], player2_chess_position[i][1]);
         }
     }
+    // Goal 的初始位置
+    static final double GOAL_WIDTH = 32; // 球門寬度
+    static final double GOAL_HEIGHT = 179; // 球門高度
+    static final Point2D P1_GOAL_POSITION = new Point2D(29, 324);
+    static final Point2D P2_GOAL_POSITION = new Point2D(958, 324);
 }

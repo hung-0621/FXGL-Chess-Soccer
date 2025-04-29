@@ -26,14 +26,14 @@ public class FootBallFactory implements EntityFactory {
 
         FootBallModel model = data.get("footBallModel");
         FootBallComponent component = new FootBallComponent();
-        double size = model.getSize();
+        double radius = model.getRadius();
         Circle footBall = setView();
         PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.FOOTBALL)
                 .view(footBall)
-                .bbox(new HitBox(new Point2D(-size, -size), BoundingShape.circle(size)))
+                .bbox(new HitBox(new Point2D(-radius, -radius), BoundingShape.circle(radius)))
                 .with(physics, component, new IrremovableComponent())
                 .collidable()
                 .build();
@@ -50,8 +50,8 @@ public class FootBallFactory implements EntityFactory {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
                 .restitution(0.5f)
-                .friction(0.3f)
-                .density(0.8f));
+                .friction(0.2f)
+                .density(0.5f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);
         bd.setFixedRotation(true);

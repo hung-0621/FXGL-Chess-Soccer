@@ -2,19 +2,21 @@ package com.tkuimwd.model;
 
 public class PlayerModel {
     
-    private String name;
-    private int score;
+    // !暫時不用
 
-    public PlayerModel(String name) {
-        this.name = name;
-        this.score = 0;
-    }
+    // private String name;
+    // private int score;
 
-    public String getName() {
-        return name;
-    }
+    // public PlayerModel(String name) {
+    //     this.name = name;
+    //     this.score = 0;
+    // }
 
-    public int getScore() {
-        return score;
-    }
+    // public String getName() {
+    //     return name;
+    // }
+
+    // public int getScore() {
+    //     return score;
+    // }
 }

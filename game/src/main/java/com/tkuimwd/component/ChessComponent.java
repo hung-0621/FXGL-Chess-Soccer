@@ -17,8 +17,8 @@ public class ChessComponent extends Component {
     private Point2D speed;
     private PhysicsComponent physics;
     private Circle chess;
-    private double maxForce;
-    private double maxDistance;
+    private double maxForce; // 可施加最大的力
+    private double maxDistance; // 可拖曳的最大距離
 
     public ChessComponent() {
         this.maxForce = 200; // default
@@ -72,12 +72,6 @@ public class ChessComponent extends Component {
                 impulse,
                 center,
                 true);
-    }
-
-    public void onMove(Point2D point){
-        if(speed.getX() < 5 && speed.getY() < 5){
-
-        }
     }
 
 }
