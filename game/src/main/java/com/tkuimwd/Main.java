@@ -8,7 +8,6 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
 import com.tkuimwd.factory.FootBallFactory;
-import com.tkuimwd.factory.PlayerFactory;
 import com.tkuimwd.factory.WallFactory;
 import com.tkuimwd.factory.GoalFactory;
 import com.tkuimwd.model.BackgroundModel;
@@ -16,16 +15,11 @@ import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.model.GoalModel;
 import com.tkuimwd.model.WallModel;
 import com.tkuimwd.model.ChessModel;
-import com.tkuimwd.model.ScoreBoardModel;
 import com.tkuimwd.type.Role;
+import com.tkuimwd.ui.ScoreBoard;
 
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 
 public class Main extends GameApplication {
 
@@ -44,23 +38,8 @@ public class Main extends GameApplication {
 
     @Override
     protected void initUI() {
-        // score board
-        ScoreBoardModel scoreBoard = new ScoreBoardModel();
-        Text p1_score = new Text("" + scoreBoard.getScore(Role.PLAYER1));
-        Text p2_score = new Text("" + scoreBoard.getScore(Role.PLAYER2));
-        Text vs = new Text(" VS ");
-        p1_score.setFont(Font.font("Bold", 50));
-        p2_score.setFont(Font.font("Bold", 50));
-
-        // main
-        HBox pane = new HBox(); 
-        pane.setSpacing(10);
-        pane.setMinSize(WIDTH, 70);
-        pane.setAlignment(Pos.CENTER);
-        pane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-font-size: 20;");
-        pane.getChildren().addAll(p1_score, vs, p2_score);
-
-        FXGL.addUINode(pane, 0, 0);
+        ScoreBoard scoreBoard = new ScoreBoard(WIDTH, 70);
+        scoreBoard.CreateScoreBoard();
     }
 
     @Override
@@ -83,7 +62,6 @@ public class Main extends GameApplication {
         // Factorys
         FXGL.getGameWorld().addEntityFactory(new BackgroundFactory());
         FXGL.getGameWorld().addEntityFactory(new WallFactory());
-        FXGL.getGameWorld().addEntityFactory(new PlayerFactory());
         FXGL.getGameWorld().addEntityFactory(new FootBallFactory());
         FXGL.getGameWorld().addEntityFactory(new ChessFactory());
         FXGL.getGameWorld().addEntityFactory(new GoalFactory());
