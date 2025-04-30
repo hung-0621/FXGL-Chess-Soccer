@@ -43,7 +43,7 @@ public class WallFactory implements EntityFactory {
 
         FixtureDef fd = new FixtureDef()
                 .restitution(1.0f)  // Increase bounce
-                .friction(0.0f)     // Remove friction
+                .friction(0.1f)     // Remove friction
                 .density(1.0f);
         physics.setFixtureDef(fd);
         return physics;

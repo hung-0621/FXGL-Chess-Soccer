@@ -52,8 +52,8 @@ public class ChessFactory implements EntityFactory {
     private PhysicsComponent setPhysics() {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
-                .restitution(0.3f)
-                .friction(0.5f)
+                .restitution(0.5f)
+                .friction(0.3f)
                 .density(1f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);

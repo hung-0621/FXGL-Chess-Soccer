@@ -4,8 +4,6 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.SpawnData;
-import com.almasb.fxgl.physics.CollisionHandler;
-import com.tkuimwd.component.FootBallComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
 import com.tkuimwd.factory.FootBallFactory;
@@ -16,10 +14,8 @@ import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.model.GoalModel;
 import com.tkuimwd.model.WallModel;
 import com.tkuimwd.model.ChessModel;
-import com.tkuimwd.type.EntityType;
 import com.tkuimwd.type.Role;
 import com.tkuimwd.ui.ScoreBoard;
-import com.almasb.fxgl.entity.Entity;
 
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
@@ -34,7 +30,7 @@ public class Main extends GameApplication {
         settings.setWidth(WIDTH);
         settings.setHeight(HEIGHT);
         settings.setTitle("TKUIMWD");
-        settings.setVersion("v1.0");
+        settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
     }
@@ -112,17 +108,6 @@ public class Main extends GameApplication {
     @Override
     protected void initPhysics() {
         FXGL.getPhysicsWorld().setGravity(0, 0);
-
-        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.FOOTBALL, EntityType.WALL) {
-        @Override
-        protected void onCollisionBegin(Entity ball, Entity wall) {
-            ball.getComponentOptional(FootBallComponent.class).ifPresent(c -> c.setTouchingWall(true));
-        }
-        @Override
-        protected void onCollisionEnd(Entity ball, Entity wall) {
-            ball.getComponentOptional(FootBallComponent.class).ifPresent(c -> c.setTouchingWall(false));
-        }
-    });
     }
 
     private void initMouseTracker() {
