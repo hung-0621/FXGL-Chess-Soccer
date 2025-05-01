@@ -21,7 +21,7 @@ public class ChessComponent extends Component {
     private double maxDistance; // 可拖曳的最大距離
 
     public ChessComponent() {
-        this.maxForce = 200; // default
+        this.maxForce = 150; // default
         this.maxDistance = 150; // default
     }
 

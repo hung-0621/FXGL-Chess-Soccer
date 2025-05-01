@@ -4,7 +4,6 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.SpawnData;
-
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
 import com.tkuimwd.factory.FootBallFactory;
@@ -31,7 +30,7 @@ public class Main extends GameApplication {
         settings.setWidth(WIDTH);
         settings.setHeight(HEIGHT);
         settings.setTitle("TKUIMWD");
-        settings.setVersion("v1.0");
+        settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
     }
