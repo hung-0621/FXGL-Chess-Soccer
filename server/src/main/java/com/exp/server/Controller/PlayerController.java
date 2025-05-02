@@ -29,7 +29,7 @@ public class PlayerController {
     }
 
     // ID 取得單一玩家
-    @GetMapping("/{id}")
+    @GetMapping("findOne/{id}")
     public ResponseEntity<?> getPlayerById(@PathVariable String id) {
         Optional<PlayerModel> player = playerRepository.findById(id);
         if (player.isPresent()) {
@@ -45,11 +45,10 @@ public class PlayerController {
     @PostMapping("/register")
     public ResponseEntity<?> registerPlayer(@RequestBody PlayerModel player) {
 
-        if (player.getId() == null || player.getId().isBlank() ||
-            player.getUserName() == null || player.getUserName().isBlank() ||
+        if (player.getUserName() == null || player.getUserName().isBlank() ||
             player.getEmail() == null || player.getEmail().isBlank() ||
             player.getPassword() == null || player.getPassword().isBlank()) {
-            return ResponseEntity.badRequest().body("請提供完整的 id、userName、email 和 password");
+            return ResponseEntity.badRequest().body("請提供完整的 userName、email 和 password");
         }
 
         if (playerRepository.findByEmail(player.getEmail()) != null) {
@@ -101,4 +100,58 @@ public class PlayerController {
         return ResponseEntity.ok("登出成功");
     }
 
+
+    // userName 查詢玩家
+    @GetMapping("/username/{userName}")
+    public ResponseEntity<?> getPlayerByUserName(@PathVariable String userName) {
+        PlayerModel player = playerRepository.findByUserName(userName);
+        if (player != null) {
+            return ResponseEntity.ok(player);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("查無此使用者名稱：" + userName);
+        }
+    }
+
+    // 刪除玩家
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deletePlayerById(@PathVariable String id) {
+        Optional<PlayerModel> player = playerRepository.findById(id);
+        if (player.isPresent()) {
+            playerRepository.deleteById(id);
+            return ResponseEntity.ok("玩家已成功刪除，ID：" + id);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("查無此 ID：" + id);
+        }
+    }
+
+
+    // 更新玩家資料
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updatePlayer(@PathVariable String id, @RequestBody PlayerModel updatedPlayer) {
+        Optional<PlayerModel> existingPlayerOpt = playerRepository.findById(id);
+        if (!existingPlayerOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("查無此 ID：" + id);
+        }
+        PlayerModel existingPlayer = existingPlayerOpt.get();
+
+        if (updatedPlayer.getUserName() != null && !updatedPlayer.getUserName().isBlank()) {
+            existingPlayer.setUserName(updatedPlayer.getUserName());
+        }
+
+        if (updatedPlayer.getEmail() != null && !updatedPlayer.getEmail().isBlank()) {
+            PlayerModel playerWithEmail = playerRepository.findByEmail(updatedPlayer.getEmail());
+            if (playerWithEmail != null && !playerWithEmail.getId().equals(id)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("此 email 已存在，請使用其他 email");
+            }
+            existingPlayer.setEmail(updatedPlayer.getEmail());
+        }
+
+        if (updatedPlayer.getPassword() != null && !updatedPlayer.getPassword().isBlank()) {
+            existingPlayer.setPassword(passwordEncoder.encode(updatedPlayer.getPassword()));
+        }
+
+        PlayerModel savedPlayer = playerRepository.save(existingPlayer);
+        return ResponseEntity.ok(savedPlayer);
+    }
 }

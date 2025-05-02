@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class MatchModel {
     @Id
     private String id;
+    private String roomId;
     private String player1Id;
     private String player2Id;
     private int score1;
@@ -48,4 +49,8 @@ public class MatchModel {
 
     public String getMatchStatus() { return matchStatus; }
     public void setMatchStatus(String matchStatus) { this.matchStatus = matchStatus; }
+
+    public String getRoomId() { return roomId; }
+    public void setRoom_Id(String room_Id) { this.roomId = room_Id;}
+
 }
