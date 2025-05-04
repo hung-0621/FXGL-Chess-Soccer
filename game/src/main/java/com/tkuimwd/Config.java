@@ -12,8 +12,8 @@ public class Config {
     static final String IMAGE_PATH = "/field.jpg"; // 遊戲場景背景圖片路徑
 
     // wall 的初始位置
-    static final Point2D WALL_POSITION= new Point2D(0, 70);
-    static final double[][] WALL_EDGES = {
+    public static final Point2D WALL_POSITION= new Point2D(0, 70);
+    public static final double[][] WALL_EDGES = {
             { 61, 54 }, { 61, 254  }, { 29, 254 }, { 29, 433 },
             { 61, 433 }, { 61, 651 }, { 958, 651 }, { 958, 433 },
             { 991, 433 }, { 991, 254 }, { 958, 254 }, { 958, 54 },
