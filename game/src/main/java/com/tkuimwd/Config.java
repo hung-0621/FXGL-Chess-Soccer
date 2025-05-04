@@ -44,4 +44,8 @@ public class Config {
     static final double GOAL_HEIGHT = 179; // 球門高度
     static final Point2D P1_GOAL_POSITION = new Point2D(29, 324);
     static final Point2D P2_GOAL_POSITION = new Point2D(958, 324);
+
+    // force
+    public static final double MAX_FORCE = 200; // 可施加最大的力
+    public static final double MAX_DISTANCE = 100; // 可拖曳的最大距離
 }
