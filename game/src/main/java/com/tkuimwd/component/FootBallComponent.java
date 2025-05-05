@@ -67,7 +67,7 @@ public class FootBallComponent extends Component{
         // System.out.println("minEdgeDist = " + minEdgeDist + ", ballRadius = " + ballRadius);
 
         if (minEdgeDist <= ballRadius && speed.magnitude() < 1) {
-            System.out.println("⚠️ 球貼在牆邊界上，推開！");
+            System.out.println("球貼在牆邊界上");
             Point2D nudge = new Point2D(Math.random() - 0.5, Math.random() - 0.5)
                 .normalize()
                 .multiply(30);
