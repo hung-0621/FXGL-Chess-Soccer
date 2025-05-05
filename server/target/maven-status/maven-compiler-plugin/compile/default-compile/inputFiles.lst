@@ -1,0 +1,12 @@
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/Controller/MatchController.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/Controller/PlayerController.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/Controller/RoomController.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/MyController.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/ServerApplication.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/config/SecurityConfig.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/model/MatchModel.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/model/PlayerModel.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/model/RoomModel.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/repository/MatchRepository.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/repository/PlayerRepository.java
+/Users/TT/Documents/Vscode/project/FXGL-Chess-Soccer/server/src/main/java/com/exp/server/repository/RoomRepository.java
