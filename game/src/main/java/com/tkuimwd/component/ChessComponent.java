@@ -1,5 +1,7 @@
 package com.tkuimwd.component;
 
+import com.tkuimwd.Config;
+
 import com.almasb.fxgl.core.math.Vec2;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.physics.PhysicsComponent;
@@ -17,20 +19,19 @@ public class ChessComponent extends Component {
     private Point2D speed;
     private PhysicsComponent physics;
     private Circle chess;
+    
     private double maxForce; // 可施加最大的力
     private double maxDistance; // 可拖曳的最大距離
-
-    public ChessComponent() {
-        this.maxForce = 150; // default
-        this.maxDistance = 150; // default
-    }
 
     @Override
     public void onAdded() {
         physics = getEntity().getComponent(PhysicsComponent.class);
         chess = (Circle) getEntity().getViewComponent().getChildren().get(0);
-        chess.setOnMousePressed(e -> onPress(e));
-        chess.setOnMouseReleased(e -> onRelease(e));
+        maxForce = Config.MAX_FORCE;
+        maxDistance = Config.MAX_DISTANCE;
+
+        chess.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> onPress());
+        chess.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> onRelease());
     }
 
     @Override
@@ -41,16 +42,14 @@ public class ChessComponent extends Component {
         }
     }
 
-    public void onPress(MouseEvent event) {
-        Circle chess = (Circle) event.getSource();
+    public void onPress() {
         chess.setStroke(Color.YELLOW);
-
         this.start = getEntity().getPosition();
+
         // System.out.println("Mouse Pressed on Chess: ( " + start.getX() + ", " + start.getY() + " )");
     }
 
-    public void onRelease(MouseEvent event) {
-        Circle chess = (Circle) event.getSource();
+    public void onRelease() {
         chess.setStroke(Color.WHITE);
         this.end = FXGL.getInput().getMousePositionWorld();
 

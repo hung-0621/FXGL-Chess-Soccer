@@ -3,6 +3,7 @@ package com.tkuimwd;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
@@ -14,8 +15,10 @@ import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.model.GoalModel;
 import com.tkuimwd.model.WallModel;
 import com.tkuimwd.model.ChessModel;
+import com.tkuimwd.type.EntityType;
 import com.tkuimwd.type.Role;
 import com.tkuimwd.ui.ScoreBoard;
+import com.tkuimwd.util.MouseTracker;
 
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
@@ -29,7 +32,7 @@ public class Main extends GameApplication {
     protected void initSettings(GameSettings settings) {
         settings.setWidth(WIDTH);
         settings.setHeight(HEIGHT);
-        settings.setTitle("TKUIMWD");
+        settings.setTitle("CHESS SOCCER");
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
@@ -43,8 +46,8 @@ public class Main extends GameApplication {
 
     @Override
     protected void initGame() {
-        // initMouseTracker();
-
+        // new MouseTracker().tracker();
+        
         // config
         final double[][] WALL_EDGES = Config.WALL_EDGES;
         final String IMAGE_PATH = Config.IMAGE_PATH;
@@ -108,25 +111,6 @@ public class Main extends GameApplication {
     @Override
     protected void initPhysics() {
         FXGL.getPhysicsWorld().setGravity(0, 0);
-    }
-
-    private void initMouseTracker() {
-        // 把根節點的滑鼠移動事件綁定起來
-        FXGL.getGameScene().getRoot().addEventHandler(
-                MouseEvent.MOUSE_MOVED,
-                e -> {
-                    // 場景座標
-                    double sceneX = e.getX();
-                    double sceneY = e.getY();
-
-                    // 世界座標（如果你有攝影機 / viewport）
-                    Point2D world = FXGL.getInput().getMousePositionWorld();
-                    double worldX = world.getX();
-                    double worldY = world.getY();
-
-                    System.out.printf("scene=(%.1f,%.1f) world=(%.1f,%.1f)%n",
-                            sceneX, sceneY, worldX, worldY);
-                });
     }
 
     public static void main(String[] args) {
