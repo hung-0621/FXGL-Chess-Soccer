@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.exp.server.model.MatchModel;
 import com.exp.server.model.RoomModel;
+import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.RoomRepository;
+import com.exp.server.websocket.GameWebSocketHandler;
 
 @RestController
 @RequestMapping("/room")
@@ -24,6 +27,8 @@ public class RoomController {
 
     @Autowired
     private RoomRepository roomRepository;
+    @Autowired
+    private MatchRepository matchRepository;
 
 
     
@@ -121,6 +126,82 @@ public class RoomController {
 
         roomRepository.save(room);
         return ResponseEntity.ok(room);
+    }
+
+    // Guest 玩家按下「我準備好了」
+    @PostMapping("/ready")
+    public ResponseEntity<?> guestReady(@RequestBody Map<String, String> body) {
+        String roomCode = body.get("roomCode");
+        RoomModel room = roomRepository.findByRoomCode(roomCode);
+
+        if (room == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("房間不存在");
+        }
+
+        if (room.getGuestToken() == null || !room.getGuestToken().equals(body.get("token"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("不是這個房間的 guest");
+        }
+
+        room.setGuestStatus("準備");
+        roomRepository.save(room);
+
+        return ResponseEntity.ok("guest 已準備");
+    }
+
+    @PostMapping("/start")
+    public ResponseEntity<?> startMatch(@RequestBody Map<String, String> body) {
+        String roomCode = body.get("roomCode");
+        String hostToken = body.get("token");
+
+        RoomModel room = roomRepository.findByRoomCode(roomCode);
+        if (room == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("房間不存在");
+        }
+
+        if (!room.getHostToken().equals(hostToken)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("只有房主可以開始遊戲");
+        }
+
+        if (!"準備".equals(room.getGuestStatus())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("guest 尚未準備好");
+        }
+
+    // 建立對局資料（呼叫 MatchController.create）
+    MatchModel match = new MatchModel();
+    match.setRoomId(room.getRoomCode());
+    match.setPlayer1Id(room.getHostToken());
+    match.setPlayer2Id(room.getGuestToken());
+    match.setMatchStatus("playing");
+
+    // 隨機先手
+    String current = Math.random() < 0.5 ? match.getPlayer1Id() : match.getPlayer2Id();
+    match.setCurrentPlayerId(current);
+    match.setStartedAt(LocalDateTime.now());
+
+    MatchModel savedMatch = matchRepository.save(match);
+    room.setMatchId(savedMatch.getId());
+    room.setStatus("playing");
+    roomRepository.save(room);
+
+        String gameStartMsg = String.format(
+        "{\"type\":\"game_start\",\"matchId\":\"%s\",\"yourTurn\":true}",
+        savedMatch.getId()
+    );
+
+        String guestMsg = String.format(
+        "{\"type\":\"game_start\",\"matchId\":\"%s\",\"yourTurn\":false}",
+        savedMatch.getId()
+    );
+
+    if (savedMatch.getCurrentPlayerId().equals(savedMatch.getPlayer1Id())) {
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), gameStartMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), guestMsg);
+    } else {
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), gameStartMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), guestMsg);
+    }
+
+    return ResponseEntity.ok(savedMatch);
     }
 
 }

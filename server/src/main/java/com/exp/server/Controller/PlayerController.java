@@ -65,21 +65,23 @@ public class PlayerController {
     @PostMapping("/login")
     public ResponseEntity<?> loginPlayer(@RequestBody PlayerModel loginRequest) {
         PlayerModel player = playerRepository.findByEmail(loginRequest.getEmail());
-        if (player == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("帳號不存在");
-        }
+        if (player == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("帳號不存在");
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), player.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密碼錯誤");
         }
 
-
-        String token = UUID.randomUUID().toString();
-        player.setToken(token);
-        playerRepository.save(player);
+        // ✅ 已經有 token 就重用
+        String token = player.getToken();
+        if (token == null || token.isBlank()) {
+            token = UUID.randomUUID().toString();
+            player.setToken(token);
+            playerRepository.save(player);
+        }
 
         return ResponseEntity.ok(token);
     }
+
 
     // 登出
     @PostMapping("/logout")
