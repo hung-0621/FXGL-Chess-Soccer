@@ -35,7 +35,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private static final Map<String, LocalDateTime> disconnectTimeMap = new ConcurrentHashMap<>();
     private static final Map<String, LocalDateTime> lastActiveTimeMap = new ConcurrentHashMap<>();
 
-     private final ObjectMapper mapper = new ObjectMapper();
+
+    // 儲存所有連線的玩家（可依照房間編碼分群）
+    private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -241,6 +243,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     GameWebSocketHandler.disconnectTimeMap.remove(token);
                 }
             }
+        }
+    }
+    
+    public void broadcast(String sessionId, String update) throws Exception {
+        WebSocketSession session = sessions.get(sessionId);
+        if (session != null && session.isOpen()) {
+            session.sendMessage(new TextMessage(update));
         }
     }
 } 
