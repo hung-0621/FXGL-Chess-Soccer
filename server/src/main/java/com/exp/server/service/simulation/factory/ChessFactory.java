@@ -11,17 +11,19 @@ import com.exp.server.service.simulation.abstruct.BodyFactory;
 
 public class ChessFactory extends BodyFactory {
 
-    public ChessFactory(World world, float ppm) {
-        super(world, ppm);
+    public ChessFactory(World world) {
+        super(world);
     }
 
     public Body createBody(float x, float y) {
+        float x_m = x / ppm; // in meters
+        float y_m = y / ppm; // in meters
 
         BodyDef bd = new BodyDef();
         bd.type = BodyType.DYNAMIC;
         bd.fixedRotation = true;
         bd.linearDamping = 0.2f;
-        bd.position.set(x / ppm, y / ppm);
+        bd.position.set(x_m, y_m);
 
         CircleShape shape = new CircleShape();
         shape.setRadius(20 / ppm); // 20 pixels to meters

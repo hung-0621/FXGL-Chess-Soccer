@@ -13,9 +13,8 @@ import com.exp.server.service.simulation.abstruct.BodyFactory;
 
 public class WallFactory extends BodyFactory {
 
-    public WallFactory(World world, float ppm) {
-        super(world, ppm);
-
+    public WallFactory(World world) {
+        super(world);
     }
 
     @Override

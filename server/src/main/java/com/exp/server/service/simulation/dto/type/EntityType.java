@@ -1,7 +1,8 @@
 package com.exp.server.service.simulation.dto.type;
 
 public enum EntityType {
-    CHESS,
+    P1_CHESS,
+    P2_CHESS,
     FOOTBALL,
     BACKGROUND,
     WALL,

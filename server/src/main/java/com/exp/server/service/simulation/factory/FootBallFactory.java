@@ -11,8 +11,8 @@ import com.exp.server.service.simulation.abstruct.BodyFactory;
 
 public class FootBallFactory extends BodyFactory {
 
-    public FootBallFactory(World world, float ppm) {
-        super(world, ppm);
+    public FootBallFactory(World world) {
+        super(world);
     }
 
     @Override

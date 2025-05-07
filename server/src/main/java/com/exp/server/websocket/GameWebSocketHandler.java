@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.exp.server.service.simulation.dto.StateUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +30,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         System.out.println("玩家離線: " + session.getId());
         sessions.remove(session.getId());
+    }
+
+    public void broadcast(String sessionId, String update) throws Exception {
+        WebSocketSession session = sessions.get(sessionId);
+        if (session != null && session.isOpen()) {
+            session.sendMessage(new TextMessage(update));
+        }
     }
 
 }

@@ -10,8 +10,8 @@ import com.exp.server.service.simulation.abstruct.BodyFactory;
 
 public class BackgroundFactory extends BodyFactory {
 
-    public BackgroundFactory(World world, float ppm) {
-        super(world, ppm);
+    public BackgroundFactory(World world) {
+        super(world);
     }
 
     @Override
