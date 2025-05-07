@@ -14,7 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
@@ -30,7 +33,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    //連線
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String token = getQueryParam(session, "token");
@@ -50,9 +52,26 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         tokenSessionMap.put(token, session);
         sessionIdToTokenMap.put(session.getId(), token);
+
+        // 玩家斷線後重新連線
+        List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
+        List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
+
+        MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
+        .filter(m -> "playing".equals(m.getMatchStatus()))
+        .findFirst()
+        .orElse(null);
+        if (match != null && "playing".equals(match.getMatchStatus())) {
+            boolean yourTurn = match.getCurrentPlayerId().equals(token);
+            String restoreMsg = String.format(
+                "{\"type\":\"restore\",\"matchId\":\"%s\",\"yourTurn\":%s,\"score1\":%d,\"score2\":%d}",
+                match.getId(), yourTurn, match.getScore1(), match.getScore2()
+            );
+            sendToToken(token, restoreMsg);
+            System.out.println("已恢復玩家對局狀態：" + token);
+        }
     }
 
-    //斷線
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String token = sessionIdToTokenMap.remove(session.getId());
@@ -62,7 +81,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         System.out.println("玩家離線: " + session.getId());
     }
-
 
     private String getQueryParam(WebSocketSession session, String key) {
         String query = session.getUri().getQuery();
@@ -89,52 +107,65 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        JsonNode json = mapper.readTree(message.getPayload());
-        String type = json.get("type").asText();
+        try {
+            JsonNode json = mapper.readTree(message.getPayload());
+            String type = json.get("type").asText();
 
-        if ("shot".equals(type)) {
-            String matchId = json.get("matchId").asText();
-            MatchModel match = matchRepository.findById(matchId).orElse(null);
-            if (match == null) return;
+            if ("shot".equals(type)) {
+                String matchId = json.get("matchId").asText();
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null) return;
 
-            // 判斷是否輪到這個玩家（token 取自當前 session）
-            String senderToken = getQueryParam(session, "token");
-            if (!match.getCurrentPlayerId().equals(senderToken)) {
-                System.out.println("⚠️ 不合法操作：不是你的回合！");
-                String denyMsg = "{\"type\":\"error\",\"message\":\"不是你的回合\"}";
-                sendToToken(senderToken, denyMsg);
-                return;
+                String senderToken = getQueryParam(session, "token");
+                if (!match.getCurrentPlayerId().equals(senderToken)) {
+                    System.out.println("不合法操作：不是你的回合！");
+                    String denyMsg = "{\"type\":\"error\",\"message\":\"不是你的回合\"}";
+                    sendToToken(senderToken, denyMsg);
+                    return;
+                }
+
+                // 判斷 chessId 是否是自己的棋子（暫略）
+
+                // 模擬物理（暫略)
+
+                // 進球狀態 (暫時模擬必進球)
+                boolean isPlayer1 = senderToken.equals(match.getPlayer1Id());
+                if (isPlayer1) {
+                    match.setScore1(match.getScore1() + 1);
+                } else {
+                    match.setScore2(match.getScore2() + 1);
+                }
+
+                if (match.getScore1() >= 7 || match.getScore2() >= 7) {
+                    match.setMatchStatus("finished");
+                    match.setEndedAt(LocalDateTime.now());
+                    String winner = match.getScore1() >= 7 ? match.getPlayer1Id() : match.getPlayer2Id();
+                    match.setWinnerId(winner);
+                    matchRepository.save(match);
+                    String msg = String.format("{\"type\":\"game_over\",\"winner\":\"%s\"}", winner);
+                    sendToToken(match.getPlayer1Id(), msg);
+                    sendToToken(match.getPlayer2Id(), msg);
+                    System.out.println("對局結束，勝利者為: " + winner);
+                    return;
+                }
+
+                String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
+                    ? match.getPlayer2Id() : match.getPlayer1Id();
+
+                match.setCurrentPlayerId(nextTurn);
+                matchRepository.save(match);
+
+                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}", match.getPlayer1Id().equals(nextTurn));
+                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}", match.getPlayer2Id().equals(nextTurn));
+
+                sendToToken(match.getPlayer1Id(), msgToP1);
+                sendToToken(match.getPlayer2Id(), msgToP2);
+
+                System.out.println("收到射擊，切換到: " + nextTurn);
             }
-
-            // 判斷 chessId 是否是自己的棋子（暫略）
-
-            // 模擬物理（略）... 你可以呼叫 physicsEngine.simulateShot(...)
-
-            // 換人
-            String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
-                ? match.getPlayer2Id() : match.getPlayer1Id();
-
-            match.setCurrentPlayerId(nextTurn);
-            matchRepository.save(match);
-
-            // 廣播 nextTurn 給雙方
-            String msgToP1 = String.format(
-                "{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                match.getPlayer1Id().equals(nextTurn)
-            );
-            String msgToP2 = String.format(
-                "{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                match.getPlayer2Id().equals(nextTurn)
-            );
-
-            sendToToken(match.getPlayer1Id(), msgToP1);
-            sendToToken(match.getPlayer2Id(), msgToP2);
-
-            System.out.println("收到射擊，切換到: " + nextTurn);
+        } catch (Exception e) {
+            System.out.println("JSON解析失敗：" + message.getPayload());
+            session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
         }
     }
-
-    
-}
-
-
+} 
