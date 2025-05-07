@@ -33,6 +33,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
     private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
     private static final Map<String, LocalDateTime> disconnectTimeMap = new ConcurrentHashMap<>();
+    private static final Map<String, LocalDateTime> lastActiveTimeMap = new ConcurrentHashMap<>();
 
      private final ObjectMapper mapper = new ObjectMapper();
 
@@ -60,6 +61,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         // 玩家斷線後重新連線
         List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
         List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
+
+        lastActiveTimeMap.put(token, LocalDateTime.now());
 
         MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
         .filter(m -> "playing".equals(m.getMatchStatus()))
@@ -173,6 +176,31 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
         }
     }
+    
+    // 系統測試中 為求方便暫時關閉
+    // @Scheduled(fixedRate = 1000)
+    // public void autoLogout() {
+    //     LocalDateTime now = LocalDateTime.now();
+
+    //     for (Map.Entry<String, LocalDateTime> entry : disconnectTimeMap.entrySet()) {
+    //         String token = entry.getKey();
+    //         LocalDateTime disconnectTime = entry.getValue();
+
+    //         if (Duration.between(disconnectTime, now).getSeconds() >= 300) {
+    //             PlayerModel player = playerRepository.findByToken(token);
+    //             if (player != null) {
+    //                 player.setToken(null);
+    //                 playerRepository.save(player);
+    //                 System.out.println("已清除資料庫中的 token：" + token);
+    //             }
+
+    //             tokenSessionMap.remove(token);
+    //             sessionIdToTokenMap.values().remove(token);
+    //             disconnectTimeMap.remove(token);
+    //             System.out.println("登出並移除記憶體記錄：" + token);
+    //         }
+    //     }
+    // }
 
     @Scheduled(fixedRate = 1000)
     public void checkTimeouts() {
