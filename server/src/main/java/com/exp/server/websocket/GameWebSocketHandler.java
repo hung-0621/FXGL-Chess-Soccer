@@ -12,26 +12,29 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import java.time.Duration;
 
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private PlayerRepository playerRepository;
-
-    private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
-    private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
-
+    
     @Autowired
     private MatchRepository matchRepository;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
+    private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
+    private static final Map<String, LocalDateTime> disconnectTimeMap = new ConcurrentHashMap<>();
+
+     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -53,6 +56,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         tokenSessionMap.put(token, session);
         sessionIdToTokenMap.put(session.getId(), token);
 
+        disconnectTimeMap.remove(token);
         // 玩家斷線後重新連線
         List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
         List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
@@ -77,6 +81,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String token = sessionIdToTokenMap.remove(session.getId());
         if (token != null) {
             tokenSessionMap.remove(token);
+            disconnectTimeMap.put(token, LocalDateTime.now()); 
         }
 
         System.out.println("玩家離線: " + session.getId());
@@ -166,6 +171,48 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         } catch (Exception e) {
             System.out.println("JSON解析失敗：" + message.getPayload());
             session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
+        }
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void checkTimeouts() {
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Map.Entry<String, LocalDateTime> entry : GameWebSocketHandler.disconnectTimeMap.entrySet()) {
+            String token = entry.getKey();
+            LocalDateTime disconnectTime = entry.getValue();
+
+            if (Duration.between(disconnectTime, now).getSeconds() >= 60) {
+                // 找到正在進行的對局
+                List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
+                List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
+
+                MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
+                        .filter(m -> "playing".equals(m.getMatchStatus()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (match != null) {
+                    String winner = token.equals(match.getPlayer1Id()) ? match.getPlayer2Id() : match.getPlayer1Id();
+
+                    match.setMatchStatus("finished");
+                    match.setWinnerId(winner);
+                    match.setEndedAt(now);
+                    matchRepository.save(match);
+
+                    String msg = String.format(
+                            "{\"type\":\"game_over\",\"winner\":\"%s\",\"reason\":\"disconnect\"}",
+                            winner
+                    );
+
+                    GameWebSocketHandler.sendToToken(match.getPlayer1Id(), msg);
+                    GameWebSocketHandler.sendToToken(match.getPlayer2Id(), msg);
+
+                    System.out.println("玩家斷線超過 60 秒，自動判定敗方為：" + token);
+
+                    GameWebSocketHandler.disconnectTimeMap.remove(token);
+                }
+            }
         }
     }
 } 
