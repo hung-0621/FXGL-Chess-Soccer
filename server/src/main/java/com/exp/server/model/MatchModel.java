@@ -51,6 +51,6 @@ public class MatchModel {
     public void setMatchStatus(String matchStatus) { this.matchStatus = matchStatus; }
 
     public String getRoomId() { return roomId; }
-    public void setRoom_Id(String room_Id) { this.roomId = room_Id;}
+    public void setRoomId(String room_Id) { this.roomId = room_Id;}
 
 }
