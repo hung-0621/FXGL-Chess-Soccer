@@ -26,7 +26,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private PlayerRepository playerRepository;
-    
+
     @Autowired
     private MatchRepository matchRepository;
 
@@ -34,7 +34,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
     private static final Map<String, LocalDateTime> disconnectTimeMap = new ConcurrentHashMap<>();
     private static final Map<String, LocalDateTime> lastActiveTimeMap = new ConcurrentHashMap<>();
-
+    private final ObjectMapper mapper = new ObjectMapper();
 
     // 儲存所有連線的玩家（可依照房間編碼分群）
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -67,15 +67,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         lastActiveTimeMap.put(token, LocalDateTime.now());
 
         MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
-        .filter(m -> "playing".equals(m.getMatchStatus()))
-        .findFirst()
-        .orElse(null);
+                .filter(m -> "playing".equals(m.getMatchStatus()))
+                .findFirst()
+                .orElse(null);
         if (match != null && "playing".equals(match.getMatchStatus())) {
             boolean yourTurn = match.getCurrentPlayerId().equals(token);
             String restoreMsg = String.format(
-                "{\"type\":\"restore\",\"matchId\":\"%s\",\"yourTurn\":%s,\"score1\":%d,\"score2\":%d}",
-                match.getId(), yourTurn, match.getScore1(), match.getScore2()
-            );
+                    "{\"type\":\"restore\",\"matchId\":\"%s\",\"yourTurn\":%s,\"score1\":%d,\"score2\":%d}",
+                    match.getId(), yourTurn, match.getScore1(), match.getScore2());
             sendToToken(token, restoreMsg);
             System.out.println("已恢復玩家對局狀態：" + token);
         }
@@ -86,7 +85,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String token = sessionIdToTokenMap.remove(session.getId());
         if (token != null) {
             tokenSessionMap.remove(token);
-            disconnectTimeMap.put(token, LocalDateTime.now()); 
+            disconnectTimeMap.put(token, LocalDateTime.now());
         }
 
         System.out.println("玩家離線: " + session.getId());
@@ -94,10 +93,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private String getQueryParam(WebSocketSession session, String key) {
         String query = session.getUri().getQuery();
-        if (query == null) return null;
+        if (query == null)
+            return null;
         for (String param : query.split("&")) {
             String[] pair = param.split("=");
-            if (pair.length == 2 && pair[0].equals(key)) return pair[1];
+            if (pair.length == 2 && pair[0].equals(key))
+                return pair[1];
         }
         return null;
     }
@@ -124,7 +125,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if ("shot".equals(type)) {
                 String matchId = json.get("matchId").asText();
                 MatchModel match = matchRepository.findById(matchId).orElse(null);
-                if (match == null) return;
+                if (match == null)
+                    return;
 
                 String senderToken = getQueryParam(session, "token");
                 if (!match.getCurrentPlayerId().equals(senderToken)) {
@@ -160,13 +162,16 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 }
 
                 String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
-                    ? match.getPlayer2Id() : match.getPlayer1Id();
+                        ? match.getPlayer2Id()
+                        : match.getPlayer1Id();
 
                 match.setCurrentPlayerId(nextTurn);
                 matchRepository.save(match);
 
-                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}", match.getPlayer1Id().equals(nextTurn));
-                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}", match.getPlayer2Id().equals(nextTurn));
+                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer1Id().equals(nextTurn));
+                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer2Id().equals(nextTurn));
 
                 sendToToken(match.getPlayer1Id(), msgToP1);
                 sendToToken(match.getPlayer2Id(), msgToP2);
@@ -178,30 +183,30 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
         }
     }
-    
+
     // 系統測試中 為求方便暫時關閉
     // @Scheduled(fixedRate = 1000)
     // public void autoLogout() {
-    //     LocalDateTime now = LocalDateTime.now();
+    // LocalDateTime now = LocalDateTime.now();
 
-    //     for (Map.Entry<String, LocalDateTime> entry : disconnectTimeMap.entrySet()) {
-    //         String token = entry.getKey();
-    //         LocalDateTime disconnectTime = entry.getValue();
+    // for (Map.Entry<String, LocalDateTime> entry : disconnectTimeMap.entrySet()) {
+    // String token = entry.getKey();
+    // LocalDateTime disconnectTime = entry.getValue();
 
-    //         if (Duration.between(disconnectTime, now).getSeconds() >= 300) {
-    //             PlayerModel player = playerRepository.findByToken(token);
-    //             if (player != null) {
-    //                 player.setToken(null);
-    //                 playerRepository.save(player);
-    //                 System.out.println("已清除資料庫中的 token：" + token);
-    //             }
+    // if (Duration.between(disconnectTime, now).getSeconds() >= 300) {
+    // PlayerModel player = playerRepository.findByToken(token);
+    // if (player != null) {
+    // player.setToken(null);
+    // playerRepository.save(player);
+    // System.out.println("已清除資料庫中的 token：" + token);
+    // }
 
-    //             tokenSessionMap.remove(token);
-    //             sessionIdToTokenMap.values().remove(token);
-    //             disconnectTimeMap.remove(token);
-    //             System.out.println("登出並移除記憶體記錄：" + token);
-    //         }
-    //     }
+    // tokenSessionMap.remove(token);
+    // sessionIdToTokenMap.values().remove(token);
+    // disconnectTimeMap.remove(token);
+    // System.out.println("登出並移除記憶體記錄：" + token);
+    // }
+    // }
     // }
 
     @Scheduled(fixedRate = 1000)
@@ -232,8 +237,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                     String msg = String.format(
                             "{\"type\":\"game_over\",\"winner\":\"%s\",\"reason\":\"disconnect\"}",
-                            winner
-                    );
+                            winner);
 
                     GameWebSocketHandler.sendToToken(match.getPlayer1Id(), msg);
                     GameWebSocketHandler.sendToToken(match.getPlayer2Id(), msg);
@@ -245,11 +249,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             }
         }
     }
-    
+
     public void broadcast(String sessionId, String update) throws Exception {
         WebSocketSession session = sessions.get(sessionId);
         if (session != null && session.isOpen()) {
             session.sendMessage(new TextMessage(update));
         }
     }
-} 
+}
