@@ -8,6 +8,7 @@ import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
 import com.exp.server.service.simulation.abstruct.BodyFactory;
+import com.exp.server.util.UnitConverter;
 
 public class FootBallFactory extends BodyFactory {
 
@@ -17,17 +18,15 @@ public class FootBallFactory extends BodyFactory {
 
     @Override
     public Body createBody(float x, float y) {
-        float x_m = x / ppm; // in meters
-        float y_m = y / ppm; // in meters
 
         BodyDef bd = new BodyDef();
         bd.type = BodyType.DYNAMIC;
         bd.fixedRotation = true;
         bd.linearDamping = 0.2f;
-        bd.position.set(x_m, y_m);
+        bd.position.set(x, y);
 
         CircleShape shape = new CircleShape();
-        shape.setRadius(12 / ppm); // 12 pixels in radius
+        shape.setRadius(UnitConverter.pxToMeter(12));
 
         FixtureDef fd = new FixtureDef();
         fd.restitution = 0.9f;

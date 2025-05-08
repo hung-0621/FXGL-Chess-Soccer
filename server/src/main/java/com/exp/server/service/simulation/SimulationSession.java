@@ -18,10 +18,11 @@ import com.exp.server.service.simulation.factory.ChessFactory;
 import com.exp.server.service.simulation.factory.FootBallFactory;
 import com.exp.server.service.simulation.factory.GoalFactory;
 import com.exp.server.service.simulation.factory.WallFactory;
+import com.exp.server.util.UnitConverter;
 
 public class SimulationSession {
     private final PhysicsWorldWapper worldWapper;
-    private Map<String,Body> bodies;
+    private Map<String, Body> bodies;
     private Queue<MoveCommand> moveCommands;
 
     public SimulationSession(PhysicsWorldWapper worldWapper) {
@@ -33,8 +34,8 @@ public class SimulationSession {
     public void init(List<EntityState> dtos) {
         for (EntityState d : dtos) {
             Body b;
-            float x = (float) d.getX();
-            float y = (float) d.getY();
+            float x = UnitConverter.pxToMeter((float) d.getX()); // meters
+            float y = UnitConverter.pxToMeter((float) d.getY()); // meters
             switch (d.getType()) {
                 case BACKGROUND:
                     BackgroundFactory backgroundFactory = new BackgroundFactory(worldWapper.getWorld());
@@ -73,16 +74,24 @@ public class SimulationSession {
         moveCommands.add(command);
     }
 
-    
     public StateUpdate stepAndGetStates(int seq) {
         step();
         List<EntityState> list = new ArrayList<>();
         for (var e : bodies.entrySet()) {
             String id = e.getKey();
-            Body b   = e.getValue();
-            Vec2 p   = b.getPosition();
-            Vec2 v   = b.getLinearVelocity();
-            EntityState s = new EntityState(id, (double)p.x, (double)p.y, (double)v.x,(double)v.y);
+            Body b = e.getValue();
+            Vec2 p = b.getPosition(); // (m)
+            Vec2 v = b.getLinearVelocity(); // (m/s)
+
+            // m → px
+            float screenX = UnitConverter.meterToPx(p.x);
+            float screenY = UnitConverter.worldMeterToScreenY(p.y);
+
+            float velX = UnitConverter.meterToPx(v.x);
+            float velY = -UnitConverter.meterToPx(v.y);
+            // 注意：velocity Y 也要翻轉方向
+
+            EntityState s = new EntityState(id, screenX, screenY, velX, velY);
             list.add(s);
         }
         StateUpdate update = new StateUpdate(seq, list);
@@ -91,17 +100,21 @@ public class SimulationSession {
     }
 
     private void step() {
-    
+
         while (!moveCommands.isEmpty()) {
             MoveCommand command = moveCommands.poll();
             Body body = bodies.get(command.getId());
-            Vec2 start = new Vec2((float) command.getStartX(), (float) command.getStartY());
-            Vec2 end = new Vec2((float) command.getEndX(), (float) command.getEndY());
+            float startX = UnitConverter.pxToMeter((float) command.getStartX()); // meters
+            float startY = UnitConverter.pxToMeter((float) command.getStartY()); // meters
+            float endX = UnitConverter.pxToMeter((float) command.getEndX()); // meters
+            float endY = UnitConverter.pxToMeter((float) command.getEndY()); // meters
+            Vec2 start = new Vec2(startX, startY);
+            Vec2 end = new Vec2(endX, endY);
             Vec2 v = new Vec2(start.sub(end));
             body.setLinearVelocity(v);
         }
-    
+
         // 物理模擬：60Hz，8 velocity iterations, 3 position iterations
-        worldWapper.getWorld().step(1/60f, 8, 3);
+        worldWapper.getWorld().step(1 / 60f, 8, 3);
     }
 }

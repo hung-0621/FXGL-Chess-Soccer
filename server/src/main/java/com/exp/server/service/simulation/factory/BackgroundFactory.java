@@ -16,12 +16,10 @@ public class BackgroundFactory extends BodyFactory {
 
     @Override
     public Body createBody(float x, float y) {
-        float x_m = x / ppm; // in meters
-        float y_m = y / ppm; // in meters
        
         BodyDef bd = new BodyDef();
         bd.type = BodyType.STATIC;
-        bd.position.set(x_m, y_m);
+        bd.position.set(x, y);
 
         FixtureDef fd = new FixtureDef();
         fd.restitution = 0f;

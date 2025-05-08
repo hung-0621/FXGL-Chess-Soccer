@@ -3,6 +3,7 @@ package com.exp.server.service.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.exp.server.EntityConfig;
 import com.exp.server.service.simulation.dto.EntityState;
 import com.exp.server.service.simulation.dto.type.EntityType;
 
