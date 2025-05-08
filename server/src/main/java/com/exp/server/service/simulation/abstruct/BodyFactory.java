@@ -5,7 +5,7 @@ import javax.swing.text.html.parser.Entity;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.World;
 
-import com.exp.server.service.simulation.EntityConfig;
+import com.exp.server.EntityConfig;
 import com.exp.server.service.simulation.dto.EntityState;
 
 @SuppressWarnings("unused")
