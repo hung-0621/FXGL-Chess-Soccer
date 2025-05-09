@@ -3,11 +3,14 @@ package com.exp.server.service.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.exp.server.EntityConfig;
 import com.exp.server.service.simulation.dto.EntityState;
 import com.exp.server.service.simulation.dto.type.EntityType;
 
 // set up EntityStatus
+@Service
 public class GameService {
     private List<EntityState> entityStatesList;
 
@@ -66,8 +69,9 @@ public class GameService {
                 0);
     }
 
+    //修改了一下 原本的寫法會造成 id.split("_") → ["p1", "goal"] 所以 ["p1", "goal"][2] → 爆炸 
     private EntityState getGoalEntityState(String id) {
-        int index = Integer.parseInt(id.split("_")[2]);
+        int index = id.contains("p1") ? 0 : 1;
         return new EntityState(
                 id,
                 EntityType.GOAL,

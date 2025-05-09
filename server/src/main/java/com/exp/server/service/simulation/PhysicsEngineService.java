@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class PhysicsEngineService {
     /** 全局遞增的 Tick 序號 */
     private final AtomicInteger tick = new AtomicInteger();
 
-    public PhysicsEngineService(GameWebSocketHandler wsHandler,
+    public PhysicsEngineService(@Lazy GameWebSocketHandler wsHandler,
                                 PhysicsWorldWapper worldWrapper) {
         this.wsHandler     = wsHandler;
         this.worldWrapper  = worldWrapper;
@@ -56,5 +57,9 @@ public class PhysicsEngineService {
                 e.printStackTrace();
             }
         });
+    }
+
+    public boolean hasSession(String sessionId) {
+        return sessions.containsKey(sessionId);
     }
 }

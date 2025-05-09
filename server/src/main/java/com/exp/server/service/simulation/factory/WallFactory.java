@@ -34,6 +34,7 @@ public class WallFactory extends BodyFactory {
         fd.friction = 0.1f;
         fd.density = 1.0f;
 
+        body = world.createBody(bd); //調了位置 不然for裡會彈出null
         // 設定每個邊緣
         for (int i = 0; i < WALL_EDGES.length; i++) {
             int nextIndex = (i + 1) % WALL_EDGES.length; // 循環到下一個點
@@ -50,7 +51,6 @@ public class WallFactory extends BodyFactory {
             body.createFixture(fd);
         }
 
-        body = world.createBody(bd);
         body.createFixture(fd);
 
         return body;

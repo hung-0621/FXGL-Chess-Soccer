@@ -10,6 +10,10 @@ import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.exp.server.service.simulation.dto.MoveCommand;
+import com.exp.server.service.simulation.dto.EntityState;
+import com.exp.server.service.simulation.PhysicsEngineService;
+import com.exp.server.service.simulation.GameService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +33,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private MatchRepository matchRepository;
+
+
+    @Autowired
+    private PhysicsEngineService physicsEngineService;
 
     private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
     private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
@@ -139,6 +147,32 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 // 判斷 chessId 是否是自己的棋子（暫略）
 
                 // 模擬物理（暫略)
+                JsonNode payload = json.get("payload");
+                // System.out.println("DEBUG payload: " + payload.toPrettyString());
+
+                MoveCommand cmd;
+                try {
+                    cmd = mapper.readValue(payload.toString(), MoveCommand.class);
+                    System.out.println("MoveCommand 解析成功: " + cmd.getId() + " / " + cmd.getSessionId());
+                } catch (Exception ex) {
+                    System.out.println("MoveCommand 解析失敗：" + ex.getMessage());
+                    ex.printStackTrace(); //請印出完整錯誤
+                    session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"MoveCommand 解析失敗\"}"));
+                    return;
+                }
+
+                // 強制以 matchId 當作 sessionId（即對戰 ID）
+                cmd.setSessionId(matchId);
+
+                // 若模擬尚未建立，則先建立對局模擬
+                if (!physicsEngineService.hasSession(matchId)) {
+                    System.out.println("自動建立物理對局 session: " + matchId);
+                    List<EntityState> initStates = new GameService().initEntityStates();
+                    physicsEngineService.createSession(matchId, initStates);
+                }
+
+                // 將指令交給後端模擬引擎
+                physicsEngineService.enqueue(cmd);
 
                 // 進球狀態 (暫時模擬必進球)
                 boolean isPlayer1 = senderToken.equals(match.getPlayer1Id());
@@ -179,7 +213,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 System.out.println("收到射擊，切換到: " + nextTurn);
             }
         } catch (Exception e) {
-            System.out.println("JSON解析失敗：" + message.getPayload());
+            System.out.println("全域 JSON解析失敗：" + e.getMessage());
+            e.printStackTrace();
             session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
         }
     }
