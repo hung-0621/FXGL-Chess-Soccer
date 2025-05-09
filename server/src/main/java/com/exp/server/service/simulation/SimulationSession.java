@@ -77,26 +77,34 @@ public class SimulationSession {
     public StateUpdate stepAndGetStates(int seq) {
         step();
         List<EntityState> list = new ArrayList<>();
+        boolean allStopped = true;
+    
         for (var e : bodies.entrySet()) {
             String id = e.getKey();
             Body b = e.getValue();
             Vec2 p = b.getPosition(); // (m)
             Vec2 v = b.getLinearVelocity(); // (m/s)
-
-            // m → px
+    
             float screenX = UnitConverter.meterToPx(p.x);
             float screenY = UnitConverter.worldMeterToScreenY(p.y);
-
+    
             float velX = UnitConverter.meterToPx(v.x);
             float velY = -UnitConverter.meterToPx(v.y);
-            // 注意：velocity Y 也要翻轉方向
-
+    
+            // 若有任何速度大於閾值，就不算停止
+            if (Math.abs(velX) > 0.1 || Math.abs(velY) > 0.1) {
+                allStopped = false;
+            }
+    
             EntityState s = new EntityState(id, screenX, screenY, velX, velY);
             list.add(s);
         }
-        StateUpdate update = new StateUpdate(seq, list);
-        seq++;
-        return update;
+    
+        if (allStopped) {
+            return null; //不再回傳任何更新
+        }
+    
+        return new StateUpdate(seq, list);
     }
 
     private void step() {

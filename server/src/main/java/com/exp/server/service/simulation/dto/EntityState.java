@@ -1,17 +1,28 @@
 package com.exp.server.service.simulation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.exp.server.service.simulation.dto.type.EntityType;
 
 public class EntityState {
-    String id;
-    int seq;
-    EntityType type;
-    double x;
-    double y;
-    double vx;
-    double vy;
 
-    
+    @JsonProperty("id")
+    private String id;
+
+    @JsonProperty("type")
+    private EntityType type;
+
+    @JsonProperty("x")
+    private double x;
+
+    @JsonProperty("y")
+    private double y;
+
+    @JsonProperty("vx")
+    private double vx;
+
+    @JsonProperty("vy")
+    private double vy;
+
     public EntityState(String id, EntityType type, double x, double y, double vx, double vy) {
         this.id = id;
         this.type = type;
@@ -21,7 +32,7 @@ public class EntityState {
         this.vy = vy;
     }
 
-    // websocket
+    // websocket 專用無 type 建構式
     public EntityState(String id, double x, double y, double vx, double vy) {
         this.id = id;
         this.x = x;
@@ -32,10 +43,6 @@ public class EntityState {
 
     public String getId() {
         return id;
-    }
-
-    public int getSeq() {
-        return seq;
     }
 
     public EntityType getType() {
@@ -81,5 +88,4 @@ public class EntityState {
     public void setVy(double vy) {
         this.vy = vy;
     }
-
 }
