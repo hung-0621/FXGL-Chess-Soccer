@@ -2,7 +2,9 @@ package com.exp.server.service.simulation;
 
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.World;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PhysicsWorldWapper {
     private World world;
 

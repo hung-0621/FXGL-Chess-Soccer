@@ -1,10 +1,28 @@
 package com.exp.server.service.simulation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class MoveCommand {
-    String id;
-    String session_id;
-    double start_x, start_y;
-    double end_x, end_y;
+    
+    @JsonProperty("id")
+    private String id;
+
+    @JsonProperty("session_id")
+    private String session_id;
+
+    @JsonProperty("start_x")
+    private double start_x;
+
+    @JsonProperty("start_y")
+    private double start_y;
+
+    @JsonProperty("end_x")
+    private double end_x;
+
+    @JsonProperty("end_y")
+    private double end_y;
+
+    public MoveCommand() {}
 
     public MoveCommand(String id, String session_id, double start_x, double start_y, double end_x, double end_y) {
         this.id = id;
@@ -21,6 +39,10 @@ public class MoveCommand {
 
     public String getSessionId() {
         return session_id;
+    }
+
+    public void setSessionId(String session_id) {
+        this.session_id = session_id;
     }
 
     public double getStartX() {

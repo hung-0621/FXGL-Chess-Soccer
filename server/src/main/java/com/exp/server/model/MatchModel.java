@@ -18,6 +18,8 @@ public class MatchModel {
     private LocalDateTime endedAt;
     private String currentPlayerId;
     private String matchStatus;
+    // 表示目前是否在等待實體靜止來切換回合
+    private boolean waitingForTurnSwitch = false;
 
     // Getters and Setters
     public String getId() { return id; }
@@ -52,5 +54,10 @@ public class MatchModel {
 
     public String getRoomId() { return roomId; }
     public void setRoomId(String room_Id) { this.roomId = room_Id;}
+
+    public boolean isWaitingForTurnSwitch() {
+        return waitingForTurnSwitch;}
+    public void setWaitingForTurnSwitch(boolean value) {
+        this.waitingForTurnSwitch = value;}
 
 }

@@ -24,7 +24,8 @@ public class ContactListenerImply implements ContactListener {
 
     @Override
     public void postSolve(Contact contact, ContactImpulse impulse) {
-        throw new UnsupportedOperationException("Unimplemented method 'postSolve'");
+        //throw new UnsupportedOperationException("Unimplemented method 'postSolve'");
+        //先註解不然會狂噴錯
     }
 
 }

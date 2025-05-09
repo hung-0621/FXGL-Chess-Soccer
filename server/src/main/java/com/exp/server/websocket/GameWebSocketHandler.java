@@ -10,6 +10,10 @@ import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.exp.server.service.simulation.dto.MoveCommand;
+import com.exp.server.service.simulation.dto.EntityState;
+import com.exp.server.service.simulation.PhysicsEngineService;
+import com.exp.server.service.simulation.GameService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +33,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private MatchRepository matchRepository;
+
+
+    @Autowired
+    private PhysicsEngineService physicsEngineService;
 
     private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
     private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
@@ -125,61 +133,60 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if ("shot".equals(type)) {
                 String matchId = json.get("matchId").asText();
                 MatchModel match = matchRepository.findById(matchId).orElse(null);
-                if (match == null)
-                    return;
-
+                if (match == null) return;
+            
                 String senderToken = getQueryParam(session, "token");
                 if (!match.getCurrentPlayerId().equals(senderToken)) {
-                    System.out.println("不合法操作：不是你的回合！");
-                    String denyMsg = "{\"type\":\"error\",\"message\":\"不是你的回合\"}";
-                    sendToToken(senderToken, denyMsg);
+                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
                     return;
                 }
 
                 // 判斷 chessId 是否是自己的棋子（暫略）
-
-                // 模擬物理（暫略)
-
-                // 進球狀態 (暫時模擬必進球)
+            
+                JsonNode payload = json.get("payload");
+                MoveCommand cmd;
+                try {
+                    cmd = mapper.readValue(payload.toString(), MoveCommand.class);
+                } catch (Exception ex) {
+                    session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"MoveCommand 解析失敗\"}"));
+                    return;
+                }
+            
+                cmd.setSessionId(matchId);
+            
+                if (!physicsEngineService.hasSession(matchId)) {
+                    List<EntityState> initStates = new GameService().initEntityStates();
+                    physicsEngineService.createSession(matchId, initStates);
+                }
+            
+                physicsEngineService.enqueue(cmd);
+            
+                // 進球模擬（簡化處理）
                 boolean isPlayer1 = senderToken.equals(match.getPlayer1Id());
                 if (isPlayer1) {
                     match.setScore1(match.getScore1() + 1);
                 } else {
                     match.setScore2(match.getScore2() + 1);
                 }
-
+            
                 if (match.getScore1() >= 7 || match.getScore2() >= 7) {
                     match.setMatchStatus("finished");
                     match.setEndedAt(LocalDateTime.now());
-                    String winner = match.getScore1() >= 7 ? match.getPlayer1Id() : match.getPlayer2Id();
-                    match.setWinnerId(winner);
+                    match.setWinnerId(match.getScore1() >= 7 ? match.getPlayer1Id() : match.getPlayer2Id());
                     matchRepository.save(match);
-                    String msg = String.format("{\"type\":\"game_over\",\"winner\":\"%s\"}", winner);
+                    String msg = String.format("{\"type\":\"game_over\",\"winner\":\"%s\"}", match.getWinnerId());
                     sendToToken(match.getPlayer1Id(), msg);
                     sendToToken(match.getPlayer2Id(), msg);
-                    System.out.println("對局結束，勝利者為: " + winner);
                     return;
                 }
-
-                String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
-                        ? match.getPlayer2Id()
-                        : match.getPlayer1Id();
-
-                match.setCurrentPlayerId(nextTurn);
+            
+                // ✅ 等待物理結束後自動切換回合
+                match.setWaitingForTurnSwitch(true);
                 matchRepository.save(match);
-
-                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                        match.getPlayer1Id().equals(nextTurn));
-                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                        match.getPlayer2Id().equals(nextTurn));
-
-                sendToToken(match.getPlayer1Id(), msgToP1);
-                sendToToken(match.getPlayer2Id(), msgToP2);
-
-                System.out.println("收到射擊，切換到: " + nextTurn);
             }
         } catch (Exception e) {
-            System.out.println("JSON解析失敗：" + message.getPayload());
+            System.out.println("全域 JSON解析失敗：" + e.getMessage());
+            e.printStackTrace();
             session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
         }
     }
@@ -250,10 +257,25 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    public void broadcast(String sessionId, String update) throws Exception {
-        WebSocketSession session = sessions.get(sessionId);
-        if (session != null && session.isOpen()) {
-            session.sendMessage(new TextMessage(update));
+    public void broadcast(String matchId, String update) throws Exception {
+        MatchModel match = matchRepository.findById(matchId).orElse(null);
+        if (match == null) {
+            System.out.println("找不到 matchId：" + matchId);
+            return;
+        }
+    
+        String player1Token = match.getPlayer1Id();
+        String player2Token = match.getPlayer2Id();
+    
+        WebSocketSession session1 = tokenSessionMap.get(player1Token);
+        WebSocketSession session2 = tokenSessionMap.get(player2Token);
+    
+        if (session1 != null && session1.isOpen()) {
+            session1.sendMessage(new TextMessage(update));
+        }
+    
+        if (session2 != null && session2.isOpen()) {
+            session2.sendMessage(new TextMessage(update));
         }
     }
 }
