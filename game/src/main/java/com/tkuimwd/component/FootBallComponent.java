@@ -1,13 +1,14 @@
 package com.tkuimwd.component;
 
-
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import javafx.geometry.Point2D;
 import javafx.collections.ObservableList;
+import javafx.scene.shape.Polygon;
+import com.tkuimwd.Config;
 
-public class FootBallComponent extends Component{
-    
+public class FootBallComponent extends Component {
+
     private Point2D speed;
     private PhysicsComponent physics;
 
@@ -15,8 +16,6 @@ public class FootBallComponent extends Component{
     public void onAdded() {
         physics = getEntity().getComponent(PhysicsComponent.class);
     }
-
-
 
     @Override
     public void onUpdate(double tpf) {
@@ -30,10 +29,10 @@ public class FootBallComponent extends Component{
         Point2D ballCenter = getEntity().getCenter();
         double ballRadius = getEntity().getBoundingBoxComponent().getWidth() / 2;
 
-        Point2D wallOrigin = com.tkuimwd.Config.WALL_POSITION;
-        double[][] WALL_EDGES = com.tkuimwd.Config.WALL_EDGES;
+        Point2D wallOrigin = Config.WALL_POSITION;
+        double[][] WALL_EDGES = Config.WALL_EDGES;
 
-        javafx.scene.shape.Polygon polygon = new javafx.scene.shape.Polygon();
+        Polygon polygon = new Polygon();
         for (double[] p : WALL_EDGES) {
             polygon.getPoints().addAll(p[0] + wallOrigin.getX(), p[1] + wallOrigin.getY());
         }
@@ -61,16 +60,17 @@ public class FootBallComponent extends Component{
                 minEdgeDist = dist;
             }
         }
-        
+
         // debug
         // System.out.println("Ball center: " + ballCenter);
-        // System.out.println("minEdgeDist = " + minEdgeDist + ", ballRadius = " + ballRadius);
+        // System.out.println("minEdgeDist = " + minEdgeDist + ", ballRadius = " +
+        // ballRadius);
 
         if (minEdgeDist <= ballRadius && speed.magnitude() < 1) {
             System.out.println("⚠️ 球貼在牆邊界上，推開！");
             Point2D nudge = new Point2D(Math.random() - 0.5, Math.random() - 0.5)
-                .normalize()
-                .multiply(30);
+                    .normalize()
+                    .multiply(30);
             physics.setLinearVelocity(nudge);
         }
     }

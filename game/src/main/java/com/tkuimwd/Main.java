@@ -5,6 +5,7 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
 import com.tkuimwd.factory.FootBallFactory;
@@ -47,6 +48,7 @@ public class Main extends GameApplication {
     @Override
     protected void initGame() {
         // new MouseTracker().tracker();
+        initNetwork();
         
         // config
         final double[][] WALL_EDGES = Config.WALL_EDGES;
@@ -101,6 +103,12 @@ public class Main extends GameApplication {
         FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
 
+    }
+
+    private void initNetwork(){
+        FXGL.entityBuilder()
+            .with(new NetworkComponent())
+            .buildAndAttach();
     }
 
     @Override
