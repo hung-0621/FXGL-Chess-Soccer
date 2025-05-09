@@ -8,7 +8,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
 import javafx.scene.input.MouseEvent;
 
 public class AimComponent extends Component {
@@ -61,13 +60,13 @@ public class AimComponent extends Component {
         double dy = vec.normalize().getY() * distance;
         end = start.multiply(2).subtract(temp);
 
-        double angle = Math.toDegrees(Math.atan2(end.getY(), end.getX()));
-        System.out.println(
-                "Mouse Pressed on Chess: ( " + start.getX() + ", " + start.getY() + " )" +
-                        "\nMouse Released on Chess: ( " + end.getX() + ", " + end.getY() + " )" +
-                        "\nDistance: " + distance +
-                        "\nAngle: " + angle +
-                        "\nVector: (" + dx + ", " + dy + ")\n");
+        // double angle = Math.toDegrees(Math.atan2(end.getY(), end.getX()));
+        // System.out.println(
+        //         "Mouse Pressed on Chess: ( " + start.getX() + ", " + start.getY() + " )" +
+        //                 "\nMouse Released on Chess: ( " + end.getX() + ", " + end.getY() + " )" +
+        //                 "\nDistance: " + distance +
+        //                 "\nAngle: " + angle +
+        //                 "\nVector: (" + dx + ", " + dy + ")\n");
         // 設定線段長度
         forceCircle.setRadius(getDistance());
         line.setEndX(dx);

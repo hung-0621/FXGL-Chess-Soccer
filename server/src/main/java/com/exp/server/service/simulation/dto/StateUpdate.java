@@ -11,6 +11,14 @@ public class StateUpdate {
         this.states = states;
     }
 
+    public int getSeq() {
+        return seq;
+    }
+
+    public List<EntityState> getStates() {
+        return states;
+    }
+
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("StateUpdate{seq=").append(seq).append(", states=[");

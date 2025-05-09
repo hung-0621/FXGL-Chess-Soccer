@@ -4,7 +4,6 @@ import com.exp.server.service.simulation.dto.type.EntityType;
 
 public class EntityState {
     String id;
-    int seq;
     EntityType type;
     double x;
     double y;
@@ -32,10 +31,6 @@ public class EntityState {
 
     public String getId() {
         return id;
-    }
-
-    public int getSeq() {
-        return seq;
     }
 
     public EntityType getType() {

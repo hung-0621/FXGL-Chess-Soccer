@@ -3,11 +3,14 @@ package com.exp.server.service.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.exp.server.EntityConfig;
 import com.exp.server.service.simulation.dto.EntityState;
 import com.exp.server.service.simulation.dto.type.EntityType;
 
 // set up EntityStatus
+@Service
 public class GameService {
     private List<EntityState> entityStatesList;
 
