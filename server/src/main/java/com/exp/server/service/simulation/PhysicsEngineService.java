@@ -29,11 +29,11 @@ public class PhysicsEngineService {
     private final AtomicInteger tick = new AtomicInteger();
 
     public PhysicsEngineService(MatchRepository matchRepository,
-                                @Lazy GameWebSocketHandler wsHandler,
-                                PhysicsWorldWapper worldWrapper) {
-        this.matchRepository = matchRepository;                            
-        this.wsHandler     = wsHandler;
-        this.worldWrapper  = worldWrapper;
+            @Lazy GameWebSocketHandler wsHandler,
+            PhysicsWorldWapper worldWrapper) {
+        this.matchRepository = matchRepository;
+        this.wsHandler = wsHandler;
+        this.worldWrapper = worldWrapper;
     }
 
     /** 建立新對局，並初始化物件 */
@@ -55,46 +55,51 @@ public class PhysicsEngineService {
     @Scheduled(fixedRate = 16)
     public void stepAll() {
         sessions.forEach((sessionId, session) -> {
-        int seq = tick.incrementAndGet();
-        StateUpdate update = session.stepAndGetStates(seq);
+            int seq = tick.incrementAndGet();
+            StateUpdate update = session.stepAndGetStates(seq);
 
-        if (update == null) {
-            // 表示已經停止了：檢查是否要切換回合
-            MatchModel match = matchRepository.findById(sessionId).orElse(null);
-            if (match != null && match.isWaitingForTurnSwitch()) {
-                match.setWaitingForTurnSwitch(false);
+            if (update == null) {
+                // 表示已經停止了：檢查是否要切換回合
+                MatchModel match = matchRepository.findById(sessionId).orElse(null);
+                if (match != null && match.isWaitingForTurnSwitch()) {
+                    match.setWaitingForTurnSwitch(false);
 
-                // 切換回合
-                String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
-                        ? match.getPlayer2Id()
-                        : match.getPlayer1Id();
+                    // 切換回合
+                    String nextTurn = match.getCurrentPlayerId().equals(match.getPlayer1Id())
+                            ? match.getPlayer2Id()
+                            : match.getPlayer1Id();
 
-                match.setCurrentPlayerId(nextTurn);
-                matchRepository.save(match);
+                    match.setCurrentPlayerId(nextTurn);
+                    matchRepository.save(match);
 
-                // 廣播 turn 更新
-                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                        match.getPlayer1Id().equals(nextTurn));
-                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-                        match.getPlayer2Id().equals(nextTurn));
+                    // 廣播 turn 更新
+                    String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                            match.getPlayer1Id().equals(nextTurn));
+                    String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                            match.getPlayer2Id().equals(nextTurn));
 
-                GameWebSocketHandler.sendToToken(match.getPlayer1Id(), msgToP1);
-                GameWebSocketHandler.sendToToken(match.getPlayer2Id(), msgToP2);
+                    GameWebSocketHandler.sendToToken(match.getPlayer1Id(), msgToP1);
+                    GameWebSocketHandler.sendToToken(match.getPlayer2Id(), msgToP2);
 
-                System.out.println("⚙️ 自動切換回合：現在輪到 " + nextTurn);
+                    System.out.println("自動切換回合：現在輪到 " + nextTurn);
+                }
+
+                return;
             }
 
-            return;
-        }
+            try {
+                //每 3 tick 才回傳資料給前端
+                if (seq % 3 != 0)
+                    return;
 
-        try {
-            String json = new ObjectMapper().writeValueAsString(update);
-            wsHandler.broadcast(sessionId, json);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    });
-}
+                String json = new ObjectMapper().writeValueAsString(update);
+                wsHandler.broadcast(sessionId, json);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
+    }
 
     public boolean hasSession(String sessionId) {
         return sessions.containsKey(sessionId);

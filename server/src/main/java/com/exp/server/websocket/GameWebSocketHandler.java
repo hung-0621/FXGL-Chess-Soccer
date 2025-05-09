@@ -142,9 +142,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 }
 
                 // 判斷 chessId 是否是自己的棋子（暫略）
-            
+                
+
+
                 JsonNode payload = json.get("payload");
                 MoveCommand cmd;
+
+                // 加一個限制最大最小力
                 try {
                     cmd = mapper.readValue(payload.toString(), MoveCommand.class);
                 } catch (Exception ex) {
