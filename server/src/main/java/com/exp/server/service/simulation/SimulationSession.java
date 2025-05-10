@@ -63,6 +63,9 @@ public class SimulationSession {
                     bodies.put(d.getId(), b);
                     break;
                 case P2_CHESS:
+                    ChessFactory p2ChessFactory = new ChessFactory(worldWapper.getWorld());
+                    b = p2ChessFactory.createBody(x, y);
+                    bodies.put(d.getId(), b);
                     break;
                 default:
                     break;
