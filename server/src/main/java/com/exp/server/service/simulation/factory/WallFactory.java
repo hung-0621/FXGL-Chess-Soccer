@@ -21,37 +21,31 @@ public class WallFactory extends BodyFactory {
 
     @Override
     public Body createBody(float x, float y) {
-
         final float[][] WALL_EDGES = EntityConfig.WALL_EDGES;
 
         BodyDef bd = new BodyDef();
         bd.type = BodyType.STATIC;
-        bd.position.set(0, 70);
-        bd.position.set(x, y);
+        bd.position.set(0, 0); // 用全域座標，不要 offset 70
+        body = world.createBody(bd);
 
         FixtureDef fd = new FixtureDef();
         fd.restitution = 1.0f;
         fd.friction = 0.1f;
         fd.density = 1.0f;
 
-        body = world.createBody(bd); //調了位置 不然for裡會彈出null
-        // 設定每個邊緣
         for (int i = 0; i < WALL_EDGES.length; i++) {
-            int nextIndex = (i + 1) % WALL_EDGES.length; // 循環到下一個點
-            
-            float x1 = WALL_EDGES[i][0] = UnitConverter.pxToMeter((WALL_EDGES[i][0]));
-            float y1 = WALL_EDGES[i][1] = UnitConverter.pxToMeter((WALL_EDGES[i][1]));
-            float x2 = WALL_EDGES[nextIndex][0] = UnitConverter.pxToMeter((WALL_EDGES[nextIndex][0]));
-            float y2 = WALL_EDGES[nextIndex][1] = UnitConverter.pxToMeter((WALL_EDGES[nextIndex][1]));
+            int nextIndex = (i + 1) % WALL_EDGES.length;
+
+            float x1 = UnitConverter.pxToMeter(WALL_EDGES[i][0]);
+            float y1 = UnitConverter.pxToMeter(WALL_EDGES[i][1]);
+            float x2 = UnitConverter.pxToMeter(WALL_EDGES[nextIndex][0]);
+            float y2 = UnitConverter.pxToMeter(WALL_EDGES[nextIndex][1]);
 
             EdgeShape edge = new EdgeShape();
             edge.set(new Vec2(x1, y1), new Vec2(x2, y2));
-
             fd.shape = edge;
             body.createFixture(fd);
         }
-
-        body.createFixture(fd);
 
         return body;
     }

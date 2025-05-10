@@ -71,7 +71,7 @@ public class PlayerController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密碼錯誤");
         }
 
-        // ✅ 已經有 token 就重用
+        // 已經有 token 就重用
         String token = player.getToken();
         if (token == null || token.isBlank()) {
             token = UUID.randomUUID().toString();

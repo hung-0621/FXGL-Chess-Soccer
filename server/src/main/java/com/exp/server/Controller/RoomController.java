@@ -40,10 +40,22 @@ public class RoomController {
             return ResponseEntity.badRequest().body("請提供 token");
         }
 
+        //產生不重複的房號
+        String roomCode;
+        int maxAttempts = 10;
+        int attempts = 0;
+        do {
+            roomCode = generateRoomCode();
+            attempts++;
+            if (attempts > maxAttempts) {
+                return ResponseEntity.status(500).body("無法產生唯一房號，請稍後再試");
+            }
+        } while (roomRepository.findByRoomCode(roomCode) != null);
+
         RoomModel room = new RoomModel();
         room.setHostToken(hostToken);
         room.setStatus("waiting");
-        room.setRoomCode(generateRoomCode()); // 產生像 ABC123 的房號
+        room.setRoomCode(roomCode);
         room.setCreatedAt(LocalDateTime.now());
         room.setGuestStatus("未準備");
 
@@ -52,7 +64,13 @@ public class RoomController {
     }
 
     private String generateRoomCode() {
-        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     // 玩家加入房間(roomCode , token)
@@ -165,6 +183,11 @@ public class RoomController {
         if (!"準備".equals(room.getGuestStatus())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("guest 尚未準備好");
         }
+
+        if ("finished".equals(room.getStatus())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("此房間的對戰已結束，無法重新開始");
+        }
+
 
     // 建立對局資料（呼叫 MatchController.create）
     MatchModel match = new MatchModel();
