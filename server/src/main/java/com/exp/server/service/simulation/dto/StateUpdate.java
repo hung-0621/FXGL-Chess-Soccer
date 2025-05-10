@@ -22,6 +22,10 @@ public class StateUpdate {
         this.states = states;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public int getSeq() {
         return seq;
     }
@@ -29,9 +33,4 @@ public class StateUpdate {
     public List<EntityState> getStates() {
         return states;
     }
-
-    public String getType() {
-        return type;
-    }
-
 }

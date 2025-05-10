@@ -4,6 +4,7 @@ import com.tkuimwd.type.EntityType;
 import com.tkuimwd.type.Role;
 import com.tkuimwd.component.AimComponent;
 import com.tkuimwd.component.ChessComponent;
+import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.model.ChessModel;
 
 import com.almasb.fxgl.dsl.FXGL;
@@ -31,6 +32,7 @@ public class ChessFactory implements EntityFactory {
     public Entity spawnPlayer1(SpawnData data) {
         ChessModel model = data.get("chessModel");
         double size = model.getSize();
+        EntityType type = model.getRole() == Role.PLAYER1 ? EntityType.P1_CHESS : EntityType.P2_CHESS;
         Circle chessView = setChessView(model);
         Group aimView = setAimView();
         PhysicsComponent physics = setPhysics();
@@ -38,7 +40,7 @@ public class ChessFactory implements EntityFactory {
         AimComponent arrowComponent = new AimComponent();
 
         return FXGL.entityBuilder(data)
-                .type(EntityType.CHESS)
+                .type(type)
                 .view(chessView)
                 .view(aimView)
                 .bbox(new HitBox(new Point2D(-size, -size), BoundingShape.circle(size)))

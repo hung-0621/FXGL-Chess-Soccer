@@ -73,4 +73,8 @@ public class ChessComponent extends Component {
                 true);
     }
 
+    public Point2D getSpeed(){
+        return speed;
+    }
+
 }

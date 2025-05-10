@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.tkuimwd.api.dto.StateUpdate;
+import com.tkuimwd.type.EntityType;
 
 import javafx.util.Duration;
 
@@ -28,21 +29,48 @@ public class NetworkComponent extends Component {
     private WebSocket ws;
     private ObjectMapper mapper = new ObjectMapper();
     private Map<String, Entity> idMap = new HashMap<>();
+    private int seq = 0;
+    private int frameCount = 0;
+    private final int FRAMES_PER_UPDATE = 18; // 每6幀更新一次，約0.1秒(假設60FPS)
 
     @Override
     public void onAdded() {
+        idMap.clear();
+
         // 1) 先 collect idMap
-        FXGL.getGameWorld().getEntities()
-                .forEach(e -> {
-                    String id = e.getString("id");
-                    if (id != null)
-                        idMap.put(id, e);
-                });
+        List<Entity> p1List = FXGL.getGameWorld()
+                .getEntitiesByType(EntityType.P1_CHESS);
+        for (int i = 0; i < p1List.size(); i++) {
+            Entity e = p1List.get(i);
+
+            // 設定屬性
+            String key = "p1_chess_" + i;
+            e.getProperties().setValue("id", key);
+
+            // 放入 map
+            idMap.put(key, e);
+        }
+
+        List<Entity> p2List = FXGL.getGameWorld()
+                .getEntitiesByType(EntityType.P2_CHESS);
+        for (int i = 0; i < p2List.size(); i++) {
+            Entity e = p2List.get(i);
+            String key = "p2_chess_" + i;
+            e.getProperties().setValue("id", key);
+            idMap.put(key, e);
+        }
+
+        Entity football = FXGL.getGameWorld().getEntitiesByType(EntityType.FOOTBALL).get(0);
+        football.getProperties().setValue("id", "football");
+        String id = football.getString("id");
+        if (id != null) {
+            idMap.put(id, football);
+        }
 
         // 2) 建 WS，連到你的 relay server
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
-                .buildAsync(URI.create("ws://localhost:8080/ws/game?room=room123"),
+                .buildAsync(URI.create("ws://localhost:8080/ws/game?token=room123"),
                         new WSListener())
                 .thenAccept(ws -> this.ws = ws);
     }
@@ -50,28 +78,36 @@ public class NetworkComponent extends Component {
     @Override
     public void onUpdate(double tpf) {
         // 每幀或固定間隔，collect 全部實體狀態並 broadcast
-        StateUpdate upd = collectState();
-        System.out.println(upd.toString());
-        sendStateUpdate(upd);
+        frameCount++;
+        if (frameCount >= FRAMES_PER_UPDATE) {
+            StateUpdate update = collectState(seq);
+            if(!update.getStates().isEmpty()) {
+                seq++;
+                System.out.println(update.toString());
+                sendStateUpdate(update);
+            }
+            frameCount = 0;
+        }
     }
 
     /** 把當前所有實體的位置＋速度打包 */
-    private StateUpdate collectState() {
+    private StateUpdate collectState(int seq) {
         List<EntityState> list = new ArrayList<>();
-        int seq = 0;
-
+        list.clear();
         idMap.forEach((id, e) -> {
             PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
 
-            double x = e.getX();
-            double y = e.getY();
-            double vx = phy.getLinearVelocity().getX();
-            double vy = phy.getLinearVelocity().getY();
-
-            list.add(new EntityState(id, x, y, vx, vy));
+            if (e != null) {
+                double x = e.getX();
+                double y = e.getY();
+                double vx = phy.getLinearVelocity().getX();
+                double vy = phy.getLinearVelocity().getY();
+                if (vx != 0 || vy != 0) {
+                    list.add(new EntityState(id, x, y, vx, vy));
+                }
+            }
         });
         StateUpdate update = new StateUpdate(seq, list);
-        seq++;
         return update;
     }
 

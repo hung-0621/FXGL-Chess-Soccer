@@ -6,7 +6,8 @@ import com.tkuimwd.type.EntityType;
 
 public class EntityState {
     String id;
-    EntityType type;
+    String session_id; //!
+    EntityType type; //!
     double x;
     double y;
     double vx;
@@ -32,6 +33,10 @@ public class EntityState {
 
     public String getId() {
         return id;
+    }
+
+    public String getSessionId() {
+        return session_id;
     }
 
     public EntityType getType() {
@@ -78,4 +83,15 @@ public class EntityState {
         this.vy = vy;
     }
 
+    @Override
+    public String toString() {
+        return "EntityState{" +
+                "id='" + id + '\'' +
+                ", type=" + type +
+                ", x=" + x +
+                ", y=" + y +
+                ", vx=" + vx +
+                ", vy=" + vy +
+                '}';
+    }
 }

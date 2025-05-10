@@ -48,8 +48,7 @@ public class Main extends GameApplication {
     @Override
     protected void initGame() {
         // new MouseTracker().tracker();
-        initNetwork();
-        
+
         // config
         final double[][] WALL_EDGES = Config.WALL_EDGES;
         final String IMAGE_PATH = Config.IMAGE_PATH;
@@ -102,13 +101,13 @@ public class Main extends GameApplication {
         }
         FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
-
+        initNetwork();
     }
 
-    private void initNetwork(){
+    private void initNetwork() {
         FXGL.entityBuilder()
-            .with(new NetworkComponent())
-            .buildAndAttach();
+                .with(new NetworkComponent())
+                .buildAndAttach();
     }
 
     @Override
