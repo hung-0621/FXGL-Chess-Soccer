@@ -8,7 +8,7 @@ import com.tkuimwd.ui.MainMenu;
 public class MenuFactory extends SceneFactory {
     @Override
     public FXGLMenu newMainMenu() {
-        return new MainMenu(MenuType.MAIN_MENU);
+        return new MainMenu();
     }
 
     // @Override

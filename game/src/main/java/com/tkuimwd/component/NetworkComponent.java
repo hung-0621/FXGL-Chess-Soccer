@@ -70,7 +70,7 @@ public class NetworkComponent extends Component {
         // 2) 建 WS，連到你的 relay server
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
-                .buildAsync(URI.create("ws://localhost:8080/ws/game?token=room123"),
+                .buildAsync(URI.create("ws://localhost:8080/ws/game?token=3271341c-c863-4f2c-8d19-eb25ac33b7fd"),
                         new WSListener())
                 .thenAccept(ws -> this.ws = ws);
     }
@@ -90,7 +90,7 @@ public class NetworkComponent extends Component {
         }
     }
 
-    /** 把當前所有實體的位置＋速度打包 */
+    /** 把當前所有實體的位置打包 */
     private StateUpdate collectState(int seq) {
         List<EntityState> list = new ArrayList<>();
         list.clear();
@@ -107,15 +107,16 @@ public class NetworkComponent extends Component {
                 }
             }
         });
-        StateUpdate update = new StateUpdate(seq, list);
+        StateUpdate update = new StateUpdate(seq,"shot","681f4eb322f7275fd1de93d4", list);
         return update;
     }
 
-    private void sendStateUpdate(StateUpdate upd) {
+    private void sendStateUpdate(StateUpdate update) {
         if (ws != null && ws.isOutputClosed() == false) {
             ObjectNode msg = mapper.createObjectNode();
-            msg.put("type", "stateUpdate");
-            msg.set("payload", mapper.valueToTree(upd));
+            msg.put("type", update.getType());
+            msg.put("matchId", update.getMatchId());
+            msg.set("payload", mapper.valueToTree(update));
             ws.sendText(msg.toString(), true);
         }
     }
@@ -126,9 +127,9 @@ public class NetworkComponent extends Component {
                 CharSequence data, boolean last) {
             try {
                 JsonNode root = mapper.readTree(data.toString());
-                if ("stateUpdate".equals(root.get("type").asText())) {
+                if ("state_update".equals(root.get("type").asText())) {
                     StateUpdate upd = mapper.treeToValue(
-                            root.get("payload"), StateUpdate.class);
+                            root.get("entities"), StateUpdate.class);
                     // 收到別人的狀態 → 更新本地 (忽略自己)
                     FXGL.getGameTimer().runOnceAfter(() -> applyRemote(upd), Duration.ZERO);
                 }
@@ -143,9 +144,10 @@ public class NetworkComponent extends Component {
     private void applyRemote(StateUpdate update) {
         for (EntityState s : update.getStates()) {
             Entity e = idMap.get(s.getId());
-            if (e == null)
+            if (e == null){
+                System.out.println("Entity not found: " + s.getId());
                 continue;
-            // optionally skip if it's this client本地(input)主控的 piece
+            }
             e.setPosition(s.getX(), s.getY());
             e.getComponent(PhysicsComponent.class)
                     .setLinearVelocity(s.getVx(), s.getVy());

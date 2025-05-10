@@ -3,13 +3,15 @@ package com.tkuimwd.api.dto;
 import java.util.List;
 
 public class StateUpdate {
-    private final String type = "shot";
-    private final String matchId = "";
+    private final String type;
+    private final String matchId;
     int seq;
     List<EntityState> states;
 
-    public StateUpdate(int seq, List<EntityState> states) {
+    public StateUpdate(int seq, String type, String matchId, List<EntityState> states) {
         this.seq = seq;
+        this.type = type;
+        this.matchId = matchId;
         this.states = states;
     }
 
@@ -23,6 +25,10 @@ public class StateUpdate {
 
     public List<EntityState> getStates() {
         return states;
+    }
+
+    public String getMatchId() {
+        return matchId;
     }
 
     @Override

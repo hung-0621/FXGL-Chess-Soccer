@@ -2,6 +2,7 @@ package com.tkuimwd;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.scene.SceneFactory;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
@@ -11,6 +12,7 @@ import com.tkuimwd.factory.ChessFactory;
 import com.tkuimwd.factory.FootBallFactory;
 import com.tkuimwd.factory.WallFactory;
 import com.tkuimwd.factory.GoalFactory;
+import com.tkuimwd.factory.MenuFactory;
 import com.tkuimwd.model.BackgroundModel;
 import com.tkuimwd.model.FootBallModel;
 import com.tkuimwd.model.GoalModel;
@@ -37,6 +39,7 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
+        // settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
