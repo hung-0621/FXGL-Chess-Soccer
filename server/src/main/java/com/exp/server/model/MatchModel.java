@@ -20,6 +20,7 @@ public class MatchModel {
     private String matchStatus;
     // 表示目前是否在等待實體靜止來切換回合
     private boolean waitingForTurnSwitch = false;
+    private boolean hasMovedThisTurn = false;
 
     // Getters and Setters
     public String getId() { return id; }
@@ -59,5 +60,10 @@ public class MatchModel {
         return waitingForTurnSwitch;}
     public void setWaitingForTurnSwitch(boolean value) {
         this.waitingForTurnSwitch = value;}
-
+    public boolean isHasMovedThisTurn() {
+    return hasMovedThisTurn;
+    }
+    public void setHasMovedThisTurn(boolean hasMovedThisTurn) {
+        this.hasMovedThisTurn = hasMovedThisTurn;
+    }
 }
