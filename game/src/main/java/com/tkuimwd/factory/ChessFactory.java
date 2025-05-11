@@ -35,7 +35,7 @@ public class ChessFactory implements EntityFactory {
         EntityType type = model.getRole() == Role.PLAYER1 ? EntityType.P1_CHESS : EntityType.P2_CHESS;
         Circle chessView = setChessView(model);
         Group aimView = setAimView();
-        PhysicsComponent physics = setPhysics();
+        // PhysicsComponent physics = setPhysics();
         ChessComponent chessComponent = new ChessComponent();
         AimComponent arrowComponent = new AimComponent();
 
@@ -44,7 +44,7 @@ public class ChessFactory implements EntityFactory {
                 .view(chessView)
                 .view(aimView)
                 .bbox(new HitBox(new Point2D(-size, -size), BoundingShape.circle(size)))
-                .with(physics, chessComponent, arrowComponent, new IrremovableComponent())
+                .with(chessComponent, arrowComponent, new IrremovableComponent()) // physics removed
                 .collidable()
                 .build();
     }

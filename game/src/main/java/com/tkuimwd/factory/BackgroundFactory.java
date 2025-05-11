@@ -26,12 +26,12 @@ public class BackgroundFactory implements EntityFactory {
 
         BackgroundModel backgroundModel = data.get("backgroundModel");
         ImageView background = setView(backgroundModel);
-        PhysicsComponent physics = setPhysics();
+        // PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.BACKGROUND)
                 .view(background)
-                .with(physics, new IrremovableComponent())
+                .with(new IrremovableComponent()) // physics removed
                 .zIndex(-100)
                 .build();
     }
