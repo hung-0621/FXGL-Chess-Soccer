@@ -20,13 +20,13 @@ public class Config {
     };
 
     // football 的初始位置
-    static final Point2D FOOTBALL_POSITION = new Point2D(511, 423);
+    public static final Point2D FOOTBALL_POSITION = new Point2D(511, 423);
 
     // chess 的初始位置
-    private static double[][] player1_chess_position = {
+    public static double[][] player1_chess_position = {
             { 160, 420 }, { 265, 305 }, { 265, 520 },
     };
-    private static double[][] player2_chess_position = {
+    public static double[][] player2_chess_position = {
             { 850, 420 }, { 750, 305 }, { 750, 520 },
     };
     static final Point2D[] P1_CHESS_POSITION = new Point2D[player1_chess_position.length];

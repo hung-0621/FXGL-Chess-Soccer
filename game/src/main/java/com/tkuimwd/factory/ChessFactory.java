@@ -29,17 +29,19 @@ import javafx.scene.shape.Line;
 public class ChessFactory implements EntityFactory {
 
     @Spawns("Chess")
-    public Entity spawnPlayer1(SpawnData data) {
+    public Entity spawnChess(SpawnData data) {
+
         ChessModel model = data.get("chessModel");
+        String id = model.getId();
         double size = model.getSize();
         EntityType type = model.getRole() == Role.PLAYER1 ? EntityType.P1_CHESS : EntityType.P2_CHESS;
         Circle chessView = setChessView(model);
         Group aimView = setAimView();
         PhysicsComponent physics = setPhysics();
-        ChessComponent chessComponent = new ChessComponent();
+        ChessComponent chessComponent = new ChessComponent(id);
         AimComponent arrowComponent = new AimComponent();
 
-        return FXGL.entityBuilder(data)
+        Entity chess = FXGL.entityBuilder(data)
                 .type(type)
                 .view(chessView)
                 .view(aimView)
@@ -47,6 +49,10 @@ public class ChessFactory implements EntityFactory {
                 .with(physics, chessComponent, arrowComponent, new IrremovableComponent())
                 .collidable()
                 .build();
+        // chess.getProperties().setValue("id", id);
+
+        return chess;
+        
     }
 
     private Circle setChessView(ChessModel chessModel) {

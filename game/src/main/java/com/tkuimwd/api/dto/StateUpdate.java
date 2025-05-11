@@ -5,18 +5,18 @@ import java.util.List;
 public class StateUpdate {
     private final String type;
     private final String matchId;
-    int seq;
+    int tick;
     List<EntityState> states;
 
-    public StateUpdate(int seq, String type, String matchId, List<EntityState> states) {
-        this.seq = seq;
-        this.type = type;
+    public StateUpdate(int tick, String matchId, List<EntityState> states) {
+        this.tick = tick;
+        this.type = "state_update";
         this.matchId = matchId;
         this.states = states;
     }
 
-    public int getSeq() {
-        return seq;
+    public int getTick() {
+        return tick;
     }
 
     public String getType() {
@@ -36,7 +36,7 @@ public class StateUpdate {
         StringBuilder sb = new StringBuilder();
         sb.append("StateUpdate{")
                 .append("type='").append(type).append('\'')
-                .append(", seq=").append(seq)
+                .append(", tick=").append(tick)
                 .append(", states=[\n");
 
         if (states != null) {

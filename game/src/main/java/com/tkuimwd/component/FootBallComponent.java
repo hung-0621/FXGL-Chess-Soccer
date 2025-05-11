@@ -9,8 +9,13 @@ import com.tkuimwd.Config;
 
 public class FootBallComponent extends Component {
 
+    private String id;
     private Point2D speed;
     // private PhysicsComponent physics;
+
+    public FootBallComponent(String id) {
+        this.id = id;
+    }
 
     @Override
     public void onAdded() {
@@ -73,6 +78,10 @@ public class FootBallComponent extends Component {
         //             .multiply(30);
         //     physics.setLinearVelocity(nudge);
         // }
+    }
+
+    public String getId() {
+        return id;
     }
 
 }

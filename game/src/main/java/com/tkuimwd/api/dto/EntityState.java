@@ -6,21 +6,21 @@ import com.tkuimwd.type.EntityType;
 
 public class EntityState {
     String id;
-    String session_id; //!
-    EntityType type; //!
+    // String session_id; //!
+    // EntityType type; //!
     double x;
     double y;
     double vx;
     double vy;
 
-    public EntityState(String id, EntityType type, double x, double y, double vx, double vy) {
-        this.id = id;
-        this.type = type;
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-    }
+    // public EntityState(String id, EntityType type, double x, double y, double vx, double vy) {
+    //     this.id = id;
+    //     this.type = type;
+    //     this.x = x;
+    //     this.y = y;
+    //     this.vx = vx;
+    //     this.vy = vy;
+    // }
 
     // websocket
     public EntityState(String id, double x, double y, double vx, double vy) {
@@ -35,13 +35,13 @@ public class EntityState {
         return id;
     }
 
-    public String getSessionId() {
-        return session_id;
-    }
+    // public String getSessionId() {
+    //     return session_id;
+    // }
 
-    public EntityType getType() {
-        return type;
-    }
+    // public EntityType getType() {
+    //     return type;
+    // }
 
     public double getX() {
         return x;
@@ -63,9 +63,9 @@ public class EntityState {
         this.id = id;
     }
 
-    public void setType(EntityType type) {
-        this.type = type;
-    }
+    // public void setType(EntityType type) {
+    //     this.type = type;
+    // }
 
     public void setX(double x) {
         this.x = x;
@@ -87,7 +87,6 @@ public class EntityState {
     public String toString() {
         return "EntityState{" +
                 "id='" + id + '\'' +
-                ", type=" + type +
                 ", x=" + x +
                 ", y=" + y +
                 ", vx=" + vx +
