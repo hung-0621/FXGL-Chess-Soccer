@@ -160,6 +160,26 @@ public class PhysicsEngineService {
         GameWebSocketHandler.sendToToken(match.getPlayer2Id(), scoreMsg);
 
         matchRepository.save(match);
+        resetEntities(matchId);
+    }
+
+    private void resetEntities(String sessionId) {
+        SimulationSession session = sessions.get(sessionId);
+        if (session == null)
+            return;
+
+        //來建立初始狀態
+        List<EntityState> initStates = new GameService().initEntityStates();
+        session.init(initStates); //把內部的 world 清空並重新加入所有實體
+
+        // 將狀態同步給前端
+        StateUpdate update = new StateUpdate(tick.incrementAndGet(), initStates);
+        try {
+            String json = new ObjectMapper().writeValueAsString(update);
+            wsHandler.broadcast(sessionId, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean hasSession(String sessionId) {
