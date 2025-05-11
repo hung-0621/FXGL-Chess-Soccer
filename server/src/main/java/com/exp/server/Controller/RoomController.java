@@ -162,6 +162,8 @@ public class RoomController {
 
         room.setGuestStatus("準備");
         roomRepository.save(room);
+        
+        GameWebSocketHandler.sendToToken(room.getHostToken(), "{\"type\":\"guest_ready\"}");
 
         return ResponseEntity.ok("guest 已準備");
     }
