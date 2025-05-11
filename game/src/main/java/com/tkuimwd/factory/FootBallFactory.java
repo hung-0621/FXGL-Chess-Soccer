@@ -28,13 +28,13 @@ public class FootBallFactory implements EntityFactory {
         FootBallComponent component = new FootBallComponent();
         double radius = model.getRadius();
         Circle footBall = setView();
-        // PhysicsComponent physics = setPhysics();
+        PhysicsComponent physics = setPhysics();
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.FOOTBALL)
                 .view(footBall)
                 .bbox(new HitBox(new Point2D(-radius, -radius), BoundingShape.circle(radius)))
-                .with(component, new IrremovableComponent()) // physics removed
+                .with(physics, component, new IrremovableComponent())
                 .collidable()
                 .build();
     }
