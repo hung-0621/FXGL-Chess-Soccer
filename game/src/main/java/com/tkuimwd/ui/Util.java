@@ -2,6 +2,8 @@ package com.tkuimwd.ui;
 
 import java.io.InputStream;
 
+import com.almasb.fxgl.dsl.FXGL;
+
 import javafx.animation.FadeTransition;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -20,10 +22,10 @@ public class Util {
         fadeOut.play();
     }
 
-    public static ImageView getImageView(Node root,String path) {
-        InputStream input = root.getClass().getResourceAsStream(path);
+    public static ImageView getImageView() {
+        InputStream input = new MainMenu().getClass().getResourceAsStream("/MainMenu.jpg");
         if (input == null) {
-            throw new IllegalStateException("找不到資源：" + path);
+            throw new IllegalStateException("找不到資源：" + "MainMenu.jpg");
         }
         Image image = new Image(input);
         ImageView view = new ImageView(image);

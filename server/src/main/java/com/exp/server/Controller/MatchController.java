@@ -74,4 +74,11 @@ public class MatchController {
         return new ResponseEntity<>("對局已成功刪除", HttpStatus.NO_CONTENT);
     }
 
+    // 根據 roomId 查詢對局
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<MatchModel> getMatchByRoomId(@PathVariable String roomId) {
+        Optional<MatchModel> match = matchRepository.findByRoomId(roomId);
+        return match.map(ResponseEntity::ok)
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 }

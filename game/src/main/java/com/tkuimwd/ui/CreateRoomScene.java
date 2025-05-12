@@ -5,6 +5,7 @@ import com.almasb.fxgl.scene.SubScene;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
+import com.tkuimwd.api.dto.MatchData;
 
 import javafx.application.Platform;
 import javafx.scene.Group;
@@ -15,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 public class CreateRoomScene extends SubScene {
 
@@ -34,6 +36,7 @@ public class CreateRoomScene extends SubScene {
     private boolean isGuestReady = false;
     private boolean tokensFetched = false;
     private boolean namesFetched = false;
+    private boolean isStarted = false;
 
     public CreateRoomScene(boolean isHost, String roomCode, String hostToken, String guestToken) {
         this.isHost = isHost;
@@ -54,6 +57,11 @@ public class CreateRoomScene extends SubScene {
 
         getContentRoot().getChildren().addAll(background, mainBox, title, backButton, p1_nameHolder, p2_nameHolder,
                 p1_Label, p2_Label, roomCodeHolder, button);
+    }
+
+    @Override
+    public void onCreate() {
+
     }
 
     @Override
@@ -130,10 +138,35 @@ public class CreateRoomScene extends SubScene {
                     });
             namesFetched = true;
         }
+
+        if (isStarted) {
+            System.out.println("開始遊戲");
+            isStarted = false;
+            Platform.runLater(() -> {
+                FXGL.getGameController().startNewGame();
+            });
+        }
+
+        // ① 如果是 Guest 而且還沒標記開始，就去向後端問一次
+        if (!isHost && !isStarted) {
+            API.getMatchInfo(roomCode)
+                    .thenAccept(matchData -> {
+                        if (matchData != null && matchData.getMatchStatus().equals("playing")) {
+                            System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
+                            Platform.runLater(() -> isStarted = true);
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        ex.printStackTrace();
+                        return null;
+                    });
+            return;
+        }
+
     }
 
     private ImageView createBackground() {
-        ImageView background = Util.getImageView(getContentRoot(), "/MainMenu.jpg");
+        ImageView background = Util.getImageView();
         background.setFitWidth(Config.WIDTH);
         background.setFitHeight(Config.HEIGHT);
         ColorAdjust adjust = new ColorAdjust();
@@ -246,8 +279,29 @@ public class CreateRoomScene extends SubScene {
                         return null;
                     });
         } else {
-            System.out.println("開始遊戲");
-            FXGL.getGameController().startNewGame();
+            ObjectNode node = JsonNodeFactory.instance.objectNode();
+            node.put("roomCode", roomCode);
+            node.put("token", hostToken);
+            API.getStart(node)
+                    .thenAccept(matchData -> {
+                        if (matchData != null) {
+                            System.out.println("matchId=" + matchData.getId());
+
+                            // **一定要切回 JavaFX Thread**，才能安全地呼 FXGL API
+                            Platform.runLater(() -> {
+                                isStarted = true;
+                            });
+                        } else {
+                            // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("無法啟動遊戲，後端回傳
+                            // null"),()->{});
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        ex.printStackTrace();
+                        // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("開始遊戲失敗：" +
+                        // ex.getMessage()));
+                        return null;
+                    });
         }
     }
 

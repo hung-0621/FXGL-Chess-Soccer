@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.ObjectBuffer;
+import com.tkuimwd.api.dto.MatchData;
 import com.tkuimwd.util.Fetch;
 
 import javafx.application.Platform;
@@ -183,6 +185,48 @@ public class API {
                 .exceptionally(ex -> {
                     System.out.println("取得 guestStatus 失敗");
                     throw new RuntimeException("取得guestStatus失敗", ex);
+                });
+    }
+
+    public static CompletableFuture<MatchData> getStart(ObjectNode node){
+        return Fetch.startGame(node.toString())
+                .thenApply(response -> {
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        MatchData matchData = mapper.readValue(response, MatchData.class);
+                        System.out.println("取得開始資訊成功");
+                        return matchData;
+                    } catch (JsonProcessingException e) {
+                        System.out.println("取得開始資訊失敗");
+                        e.printStackTrace();
+                        return null;
+                    }
+                })
+                .exceptionally(ex -> {
+                    System.out.println("取得開始資訊失敗");
+                    ex.printStackTrace();
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<MatchData> getMatchInfo(String roomId){
+        return Fetch.getMatchInfoByRoomId(roomId)
+                .thenApply(response -> {
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        MatchData matchData = mapper.readValue(response, MatchData.class);
+                        System.out.println("取得對局資訊成功:" + matchData.toString());
+                        return matchData;
+                    } catch (JsonProcessingException e) {
+                        System.out.println("取得對局資訊失敗");
+                        e.printStackTrace();
+                        return null;
+                    }
+                })
+                .exceptionally(ex -> {
+                    System.out.println("取得對局資訊失敗");
+                    ex.printStackTrace();
+                    return null;
                 });
     }
 

@@ -40,7 +40,7 @@ public class JoinRoomSecne extends SubScene {
     }
 
     private ImageView createBackground() {
-        ImageView background = Util.getImageView(getContentRoot(), "/MainMenu.jpg");
+        ImageView background = Util.getImageView();
         background.setFitWidth(Config.WIDTH);
         background.setFitHeight(Config.HEIGHT);
         return background;

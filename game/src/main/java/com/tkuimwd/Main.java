@@ -33,12 +33,16 @@ public class Main extends GameApplication {
 
     private static final int HEIGHT = Config.HEIGHT;
     private static final int WIDTH = Config.WIDTH;
-    
+
     @Override
     protected void initGameVars(Map<String, Object> vars) {
+        vars.put("matchId", "");
+        vars.put("p1_token", "");
+        vars.put("p2_token", "");
         vars.put("score1", 0);
         vars.put("score2", 0);
-        vars.put("yourTurn", true);
+        vars.put("currentPlayerId", "");
+        vars.put("matchStatus", "");
     }
 
     @Override
@@ -57,7 +61,6 @@ public class Main extends GameApplication {
         ScoreBoard scoreBoard = new ScoreBoard(WIDTH, 70);
         scoreBoard.CreateScoreBoard();
     }
-
 
     @Override
     protected void initGame() {
@@ -118,6 +121,7 @@ public class Main extends GameApplication {
         }
         FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
+        
         initNetwork();
     }
 

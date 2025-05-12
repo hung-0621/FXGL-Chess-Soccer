@@ -98,4 +98,8 @@ public class Fetch {
     public static CompletableFuture<String> startGame(String jsonBody) {
         return post("/room/start", jsonBody);
     }
+
+    public static CompletableFuture<String> getMatchInfoByRoomId (String id) {
+        return get("/match/room/" + id);
+    }
 }
