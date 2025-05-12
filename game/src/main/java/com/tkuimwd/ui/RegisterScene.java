@@ -4,9 +4,11 @@ import java.io.InputStream;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.scene.SubScene;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
 
-import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
@@ -16,7 +18,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
 
 public class RegisterScene extends SubScene {
 
@@ -38,8 +39,8 @@ public class RegisterScene extends SubScene {
         ImageView view = new ImageView(image);
         return view;
     }
-    
-    private ImageView createBackground(){
+
+    private ImageView createBackground() {
         ImageView background = getImageView("/MainMenu.jpg");
         background.setFitWidth(Config.WIDTH);
         background.setFitHeight(Config.HEIGHT);
@@ -89,7 +90,8 @@ public class RegisterScene extends SubScene {
         confirmPassLabel.setFill(Color.WHITE);
         confirmPassLabel.setFont(FXGL.getUIFactoryService().newFont(20));
 
-        submit.setOnAction(e -> onSubmit(userField.getText(), passField.getText()));
+        submit.setOnAction(e -> onSubmit(userField.getText(), emailField.getText(), passField.getText(),
+                confirmPassField.getText()));
         VBox root = new VBox(userLabel, userField, emailLabel, emailField, passLabel, passField, confirmPassLabel,
                 confirmPassField, submit);
         root.setSpacing(20);
@@ -100,29 +102,65 @@ public class RegisterScene extends SubScene {
         return root;
     }
 
-    private Text createBackButton(){
+    private Text createBackButton() {
         Text backButton = new Text("🔙");
         backButton.setTranslateX(50);
         backButton.setTranslateY(100);
         backButton.setFill(Color.WHITE);
         backButton.setFont(FXGL.getUIFactoryService().newFont(30));
         backButton.setOnMouseClicked(e -> {
-            FXGL.getSceneService().popSubScene();
+            Util.runLeaveAnimation(getContentRoot(), () -> {
+                FXGL.getSceneService().popSubScene(); // main
+            });
         });
         return backButton;
     }
 
-    private void onSubmit(String user, String pass) {
-        // 驗證邏輯...
-        // 1) 播放淡出動畫
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), getContentRoot());
-        fadeOut.setFromValue(1);
-        fadeOut.setToValue(0);
-        fadeOut.setOnFinished(evt -> {
-            // 2) 移除 SubScene 並回到底層場景
-            FXGL.getSceneService().popSubScene();
-            // 3) (可選) 顯示登入結果或進入下一個畫面
-        });
-        fadeOut.play();
+    private void onSubmit(String user, String email, String pass, String confirmPass) {
+        if (user.isEmpty() || email.isEmpty() || pass.isEmpty() || confirmPass.isEmpty()) {
+            System.out.println("Error: 請輸入所有欄位");
+            Platform.runLater(() -> {
+                FXGL.getDialogService().showErrorBox("請輸入所有欄位", () -> {
+                });
+            });
+            return;
+        }
+
+        if (!pass.equals(confirmPass)) {
+            System.out.println("Error: 密碼不一致");
+            Platform.runLater(() -> {
+                FXGL.getDialogService().showErrorBox("密碼不一致", () -> {
+                });
+            });
+            return;
+        }
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("userName", user);
+        node.put("email", email);
+        node.put("password", pass);
+        API.getRegisterInfo(node)
+                .thenAccept(success -> {
+                    if (success) {
+                        Platform.runLater(() -> {
+                            FXGL.getDialogService().showConfirmationBox("註冊成功！是否前往登入？", ans -> {
+                                if (ans) {
+                                    Util.runLeaveAnimation(getContentRoot(), () -> {
+                                        FXGL.getSceneService().popSubScene(); // main
+                                        FXGL.getSceneService().pushSubScene(new LoginScene());
+                                    });
+                                } else {
+                                    Util.runLeaveAnimation(getContentRoot(), () -> {
+                                        FXGL.getSceneService().popSubScene(); // main
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        // 註冊失敗
+                    }
+                });
+
     }
+
 }

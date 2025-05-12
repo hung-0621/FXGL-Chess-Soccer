@@ -6,6 +6,7 @@ import com.almasb.fxgl.app.scene.SceneFactory;
 import com.tkuimwd.ui.MainMenu;
 
 public class MenuFactory extends SceneFactory {
+
     @Override
     public FXGLMenu newMainMenu() {
         return new MainMenu();

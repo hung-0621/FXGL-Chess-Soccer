@@ -5,9 +5,15 @@ import java.io.InputStream;
 import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.scene.SubScene;
+import com.fasterxml.jackson.core.JsonFactoryBuilder;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
+import com.tkuimwd.util.Fetch;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
@@ -22,9 +28,23 @@ import javafx.util.Duration;
 
 public class MainMenu extends FXGLMenu {
 
+        private String token;
+
         public MainMenu() {
                 super(MenuType.MAIN_MENU);
                 initUI();
+                token = "";
+        }
+
+        public MainMenu(String token) {
+                super(MenuType.MAIN_MENU);
+                initUI();
+                this.token = token;
+        }
+
+        @Override
+        public void onCreate() {
+
         }
 
         private void initUI() {
@@ -32,11 +52,6 @@ public class MainMenu extends FXGLMenu {
                 var title = createTitle();
                 var buttons = createButton();
                 getContentRoot().getChildren().addAll(background, title, buttons);
-        }
-
-        @Override
-        public void onCreate() {
-
         }
 
         private ImageView getBackground() {
@@ -59,61 +74,77 @@ public class MainMenu extends FXGLMenu {
         }
 
         private VBox createButton() {
-                MainButton loginButton = new MainButton("Login", () -> {
-                        FXGL.getSceneService().pushSubScene(new LoginScene());
-                });
-                MainButton registerButton = new MainButton("Register", () -> {
-                        FXGL.getSceneService().pushSubScene(new RegisterScene());
-                });
-                MainButton startButton = new MainButton("Start Game", () -> {
-                        FXGL.getSceneService().pushSubScene(new RoomScene());
-                });
-                MainButton exitButton = new MainButton("Logout", () -> fireExit());
-                VBox vbox = new VBox(15, loginButton, registerButton, startButton, exitButton);
+                MainButton loginButton = new MainButton("Login", () -> toLoginScene());
+                MainButton registerButton = new MainButton("Register", () -> toRegisterScene());
+                MainButton createRoomButton = new MainButton("Create Room", () -> toCreateRoomScene());
+                MainButton joinRoomButton = new MainButton("Join Room", () -> toJoinRoomScene());
+
+                MainButton exitButton = new MainButton("Exit", () -> fireExit());
+                VBox vbox = new VBox(15, loginButton, registerButton, createRoomButton, joinRoomButton, exitButton);
                 vbox.setTranslateX(100);
                 vbox.setTranslateY(250);
                 vbox.setAlignment(Pos.CENTER_LEFT);
                 return vbox;
         }
 
-        @Override
-        protected void onUpdate(double tpf) {
+        private void toLoginScene() {
+                FXGL.getSceneService().pushSubScene(new LoginScene());
+        }
+
+        private void toRegisterScene() {
+                FXGL.getSceneService().pushSubScene(new RegisterScene());
+        }
+
+        private void toCreateRoomScene() {
+                if (token.equals("") || token == null) {
+                        Platform.runLater(() -> {
+                                FXGL.getDialogService().showConfirmationBox("創建房間前需要先登入，是否前往登入？", (ans) -> {
+                                        if (ans) {
+                                                FXGL.getSceneService().pushSubScene(new LoginScene());
+                                        }
+                                });
+                        });
+                } else {
+                        ObjectNode node = JsonNodeFactory.instance.objectNode();
+                        node.put("token", token);
+                        API.getCreateRoomInfo(node)
+                                        .thenAccept(roomCode -> {
+                                                if (roomCode != null) {
+                                                        Platform.runLater(() -> {
+                                                                FXGL.getSceneService().pushSubScene(
+                                                                                new CreateRoomScene(true, roomCode,
+                                                                                                token, null));
+                                                        });
+                                                } else {
+                                                        Platform.runLater(() -> {
+                                                                FXGL.getDialogService().showMessageBox(
+                                                                                "創建房間失敗，請稍後再試。");
+                                                        });
+                                                }
+                                        });
+                }
 
         }
 
-        private static class MainButton extends StackPane {
-
-                private final Color SELECT_COLOR = Color.WHITE;
-                private final Color UNSELECT_COLOR = Color.LIGHTGRAY;
-
-                private String name;
-                private Runnable action;
-                private Text text;
-                private Rectangle selector;
-
-                public MainButton(String name, Runnable action) {
-                        this.name = name;
-                        this.action = action;
-                        text = FXGL.getUIFactoryService().newText(name, Color.WHITE, 25);
-                        text.fillProperty().bind(
-                                        Bindings.when(focusedProperty())
-                                                        .then(SELECT_COLOR)
-                                                        .otherwise(UNSELECT_COLOR));
-
-                        selector = new Rectangle(5, 20, Color.WHITE);
-                        selector.setTranslateX(-20);
-                        selector.visibleProperty().bind(focusedProperty().or(hoverProperty()));
-
-                        setAlignment(Pos.CENTER_LEFT);
-                        setFocusTraversable(true);
-                        setOnKeyPressed(e -> {
-                                if (e.getCode() == KeyCode.ENTER) {
-                                        action.run();
-                                }
+        private void toJoinRoomScene() {
+                if (token.equals("") || token == null) {
+                        Platform.runLater(() -> {
+                                // show confirmation box
+                                FXGL.getDialogService().showConfirmationBox("加入房間前需要先登入，是否前往登入？", (ans) -> {
+                                        if (ans) {
+                                                FXGL.getSceneService().pushSubScene(new LoginScene());
+                                        }
+                                });
                         });
-                        setOnMouseEntered(e -> requestFocus());
-                        setOnMouseClicked(e -> action.run());
-                        getChildren().addAll(selector, text);
+                } else {
+                        Platform.runLater(() -> {
+                                FXGL.getSceneService().pushSubScene(new JoinRoomSecne(token));
+                        });
                 }
+        }
+
+        @Override
+        protected void onUpdate(double tpf) {
+
         }
 }

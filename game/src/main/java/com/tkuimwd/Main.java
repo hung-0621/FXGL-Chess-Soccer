@@ -8,6 +8,7 @@ import com.almasb.fxgl.app.scene.SceneFactory;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.ui.DialogFactoryService;
 import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
@@ -32,6 +33,13 @@ public class Main extends GameApplication {
 
     private static final int HEIGHT = Config.HEIGHT;
     private static final int WIDTH = Config.WIDTH;
+    
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        vars.put("score1", 0);
+        vars.put("score2", 0);
+        vars.put("yourTurn", true);
+    }
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -41,7 +49,7 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
-        // settings.setSceneFactory(new MenuFactory());
+        settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
@@ -50,12 +58,6 @@ public class Main extends GameApplication {
         scoreBoard.CreateScoreBoard();
     }
 
-    @Override
-    protected void initGameVars(Map<String, Object> vars) {
-        vars.put("score1", 0);
-        vars.put("score2", 0);
-        vars.put("yourTurn", true);
-    }
 
     @Override
     protected void initGame() {
@@ -105,7 +107,7 @@ public class Main extends GameApplication {
         FXGL.spawn("Wall", new SpawnData(WALL_POSITION).put("wallModel", wallModel));
         FXGL.spawn("FootBall",
                 new SpawnData(footBallModel.getX(), footBallModel.getY())
-                .put("footBallModel", footBallModel));
+                        .put("footBallModel", footBallModel));
         for (int i = 0; i < p1_chess_model_list.length; i++) {
             FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
                     .put("chessModel", p1_chess_model_list[i]));
