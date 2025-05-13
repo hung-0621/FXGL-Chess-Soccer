@@ -10,8 +10,8 @@ public class EntityState {
     // EntityType type; //!
     double x;
     double y;
-    double vx;
-    double vy;
+    // double vx;
+    // double vy;
 
     // public EntityState(String id, EntityType type, double x, double y, double vx, double vy) {
     //     this.id = id;
@@ -23,12 +23,12 @@ public class EntityState {
     // }
 
     // websocket
-    public EntityState(String id, double x, double y, double vx, double vy) {
+    public EntityState(String id, double x, double y) {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.vx = vx;
-        this.vy = vy;
+        // this.vx = vx;
+        // this.vy = vy;
     }
 
     public String getId() {
@@ -51,13 +51,13 @@ public class EntityState {
         return y;
     }
 
-    public double getVx() {
-        return vx;
-    }
+    // public double getVx() {
+    //     return vx;
+    // }
 
-    public double getVy() {
-        return vy;
-    }
+    // public double getVy() {
+    //     return vy;
+    // }
 
     public void setId(String id) {
         this.id = id;
@@ -75,13 +75,13 @@ public class EntityState {
         this.y = y;
     }
 
-    public void setVx(double vx) {
-        this.vx = vx;
-    }
+    // public void setVx(double vx) {
+    //     this.vx = vx;
+    // }
 
-    public void setVy(double vy) {
-        this.vy = vy;
-    }
+    // public void setVy(double vy) {
+    //     this.vy = vy;
+    // }
 
     @Override
     public String toString() {
@@ -89,8 +89,8 @@ public class EntityState {
                 "id='" + id + '\'' +
                 ", x=" + x +
                 ", y=" + y +
-                ", vx=" + vx +
-                ", vy=" + vy +
+                // ", vx=" + vx +
+                // ", vy=" + vy +
                 '}';
     }
 }

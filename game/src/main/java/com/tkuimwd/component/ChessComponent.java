@@ -62,15 +62,12 @@ public class ChessComponent extends Component {
                 id,
                 start.getX(), start.getY(),
                 end.getX(), end.getY()));
-        System.out.println("[ChessComponent] fireEvent success: " + id + " " +
-                start.getX() + ", " + start.getY() + " -> " +
-                end.getX() + ", " + end.getY());
+                
+        caculateImpulse();
+        applyImpulse(caculateImpulse());
     }
 
-    public Point2D caculateImpulse(double startX, double startY, double endX, double endY) {
-        
-        Point2D start = new Point2D(startX, startY);
-        Point2D end = new Point2D(endX, endY);
+    public Point2D caculateImpulse() {
 
         // 計算衝量
         double dist = start.distance(end);
