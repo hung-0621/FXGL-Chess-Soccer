@@ -121,9 +121,9 @@ public class LoginScene extends SubScene {
                 .thenAccept(token -> {
                     if (token != null) {
 
-                        // ✅ 儲存 token 進 Config
-                        Config.playerToken = token;
-                        System.out.println("[LoginScene] 儲存成功：token = " + Config.playerToken);
+                        // 儲存 token 進 Config
+                        Config.token = token;
+                        System.out.println("[LoginScene] 儲存成功：token = " + Config.token);
 
                         Platform.runLater(() -> {
                             Util.runLeaveAnimation(getContentRoot(), () -> {
@@ -131,7 +131,6 @@ public class LoginScene extends SubScene {
                                 FXGL.getSceneService().popSubScene(); // null
                                 FXGL.getSceneService().pushSubScene(new MainMenu(token)); // main
                                 FXGL.getDialogService().showMessageBox("登入成功！");
-                                FXGL.getWorldProperties().setValue("token", token);
                             });
                         });
                     } else {

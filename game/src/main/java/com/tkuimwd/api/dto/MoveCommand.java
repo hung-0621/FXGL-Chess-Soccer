@@ -1,17 +1,32 @@
 package com.tkuimwd.api.dto;
 
-public class MoveCommand {
-    String id;
-    // String session_id; // !
-    double start_x, start_y;
-    double end_x, end_y;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public MoveCommand(String id, double start_x, double start_y, double end_x, double end_y) {
+public class MoveCommand {
+    
+    @JsonProperty("id")
+    private String id;
+
+    @JsonProperty("startX")
+    private double startX;
+
+    @JsonProperty("startY")
+    private double startY;
+
+    @JsonProperty("endX")
+    private double endX;
+
+    @JsonProperty("endY")
+    private double endY;
+
+    public MoveCommand() {}
+
+    public MoveCommand(String id, double startX, double startY, double endX, double endY) {
         this.id = id;
-        this.start_x = start_x;
-        this.start_y = start_y;
-        this.end_x = end_x;
-        this.end_y = end_y;
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
     }
 
     public String getId() {
@@ -19,18 +34,39 @@ public class MoveCommand {
     }
 
     public double getStartX() {
-        return start_x;
+        return startX;
     }
 
     public double getStartY() {
-        return start_y;
+        return startY;
     }
 
     public double getEndX() {
-        return end_x;
+        return endX;
     }
 
     public double getEndY() {
-        return end_y;
+        return endY;
     }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setStartX(double startX) {
+        this.startX = startX;
+    }
+
+    public void setStartY(double startY) {
+        this.startY = startY;
+    }
+
+    public void setEndX(double endX) {
+        this.endX = endX;
+    }
+
+    public void setEndY(double endY) {
+        this.endY = endY;
+    }
+
 }

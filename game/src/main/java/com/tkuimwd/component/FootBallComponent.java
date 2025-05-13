@@ -67,9 +67,9 @@ public class FootBallComponent extends Component {
         }
 
         // debug
-        System.out.println("Ball center: " + ballCenter);
-        System.out.println("minEdgeDist = " + minEdgeDist + ", ballRadius = " +
-        ballRadius);
+        // System.out.println("Ball center: " + ballCenter);
+        // System.out.println("minEdgeDist = " + minEdgeDist + ", ballRadius = " +
+        // ballRadius);
 
         if (minEdgeDist <= ballRadius && speed.magnitude() < 1) {
             System.out.println("⚠️ 球貼在牆邊界上，推開！");

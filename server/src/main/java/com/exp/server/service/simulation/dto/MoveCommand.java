@@ -7,57 +7,66 @@ public class MoveCommand {
     @JsonProperty("id")
     private String id;
 
-    @JsonProperty("session_id")
-    private String session_id;
+    @JsonProperty("startX")
+    private double startX;
 
-    @JsonProperty("start_x")
-    private double start_x;
+    @JsonProperty("startY")
+    private double startY;
 
-    @JsonProperty("start_y")
-    private double start_y;
+    @JsonProperty("endX")
+    private double endX;
 
-    @JsonProperty("end_x")
-    private double end_x;
-
-    @JsonProperty("end_y")
-    private double end_y;
+    @JsonProperty("endY")
+    private double endY;
 
     public MoveCommand() {}
 
-    public MoveCommand(String id, String session_id, double start_x, double start_y, double end_x, double end_y) {
+    public MoveCommand(String id, double startX, double startY, double endX, double endY) {
         this.id = id;
-        this.session_id = session_id;
-        this.start_x = start_x;
-        this.start_y = start_y;
-        this.end_x = end_x;
-        this.end_y = end_y;
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getSessionId() {
-        return session_id;
-    }
-
-    public void setSessionId(String session_id) {
-        this.session_id = session_id;
-    }
-
     public double getStartX() {
-        return start_x;
+        return startX;
     }
 
     public double getStartY() {
-        return start_y;
+        return startY;
     }
 
     public double getEndX() {
-        return end_x;
+        return endX;
     }
 
     public double getEndY() {
-        return end_y;
+        return endY;
     }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setStartX(double startX) {
+        this.startX = startX;
+    }
+
+    public void setStartY(double startY) {
+        this.startY = startY;
+    }
+
+    public void setEndX(double endX) {
+        this.endX = endX;
+    }
+
+    public void setEndY(double endY) {
+        this.endY = endY;
+    }
+
 }

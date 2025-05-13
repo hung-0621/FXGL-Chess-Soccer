@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
@@ -123,30 +122,29 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         JsonNode msg = mapper.readTree(message.getPayload());
         String type = msg.get("type").asText();
 
-        try{
-        if ("send".equals(type)) {
-            // Extract shot message as-is
-            String matchId = msg.get("matchId").asText();
+        try {
+            if ("send".equals(type)) {
+                // Extract shot message as-is
+                String matchId = msg.get("matchId").asText();
 
-            // Lookup both player tokens by matchId
-            MatchModel match = matchRepository.findById(matchId).orElse(null);
-            if (match == null)
-                return;
+                // Lookup both player tokens by matchId
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
 
-            String player1Id = match.getPlayer1Id();
-            String player2Id = match.getPlayer2Id();
+                String player1Id = match.getPlayer1Id();
+                String player2Id = match.getPlayer2Id();
 
-            
-            ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
-            String modifiedMessage = mapper.writeValueAsString(msg);
+                ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+                String modifiedMessage = mapper.writeValueAsString(msg);
 
-            // Send the message to both players (or only to the opponent)
-            GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
-            GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+                // Send the message to both players (or only to the opponent)
+                GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+                GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
 
-            System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
-        }
-        }catch (Exception e) {
+                System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+            }
+        } catch (Exception e) {
             System.out.println("處理訊息失敗：" + e.getMessage());
             return;
         }
@@ -255,24 +253,24 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
 
     // public void broadcast(String matchId, String update) throws Exception {
-    //     MatchModel match = matchRepository.findById(matchId).orElse(null);
-    //     if (match == null) {
-    //         System.out.println("找不到 matchId：" + matchId);
-    //         return;
-    //     }
+    // MatchModel match = matchRepository.findById(matchId).orElse(null);
+    // if (match == null) {
+    // System.out.println("找不到 matchId：" + matchId);
+    // return;
+    // }
 
-    //     String player1Token = match.getPlayer1Id();
-    //     String player2Token = match.getPlayer2Id();
+    // String player1Token = match.getPlayer1Id();
+    // String player2Token = match.getPlayer2Id();
 
-    //     WebSocketSession session1 = tokenSessionMap.get(player1Token);
-    //     WebSocketSession session2 = tokenSessionMap.get(player2Token);
+    // WebSocketSession session1 = tokenSessionMap.get(player1Token);
+    // WebSocketSession session2 = tokenSessionMap.get(player2Token);
 
-    //     if (session1 != null && session1.isOpen()) {
-    //         session1.sendMessage(new TextMessage(update));
-    //     }
+    // if (session1 != null && session1.isOpen()) {
+    // session1.sendMessage(new TextMessage(update));
+    // }
 
-    //     if (session2 != null && session2.isOpen()) {
-    //         session2.sendMessage(new TextMessage(update));
-    //     }
+    // if (session2 != null && session2.isOpen()) {
+    // session2.sendMessage(new TextMessage(update));
+    // }
     // }
 }

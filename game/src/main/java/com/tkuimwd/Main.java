@@ -53,20 +53,13 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
-        // settings.setSceneFactory(new MenuFactory());
+        settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
     protected void initUI() {
         ScoreBoard scoreBoard = new ScoreBoard(WIDTH, 70);
         scoreBoard.CreateScoreBoard();
-    }
-
-    @Override
-    protected void initGameVars(Map<String, Object> vars) {
-        vars.put("score1", 0);
-        vars.put("score2", 0);
-        vars.put("yourTurn", true);
     }
 
     @Override
@@ -130,11 +123,12 @@ public class Main extends GameApplication {
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
 
         initNetwork();
+        
     }
 
     private void initNetwork() {
         FXGL.entityBuilder()
-            .with(new NetworkComponent(Config.playerToken, Config.matchId))
+            .with(new NetworkComponent())
             .buildAndAttach();
     }
 

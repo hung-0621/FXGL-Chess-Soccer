@@ -42,8 +42,8 @@ public class NetworkComponent extends Component {
     private final int FRAMES_PER_UPDATE = 18; // 每6幀更新一次，約0.1秒(假設60FPS)
     private final int UPDATE_INTERVAL_MS = 100; // 更新間隔時間(毫秒)
 
-    private final MatchData matchData = (MatchData) FXGL.getWorldProperties().getObject("matchData");
-    private final String playerToken = FXGL.getWorldProperties().getString("token");
+    private final MatchData matchData = Config.matchData;
+    private final String playerToken = Config.token;
 
     // private String matchId = "681f4eb322f7275fd1de93d4"; // 這是測試用的matchId
     // private String playerToken = "3271341c-c863-4f2c-8d19-eb25ac33b7fd"; //
@@ -82,6 +82,12 @@ public class NetworkComponent extends Component {
             idMap.put(id, football);
         }
 
+        if(playerToken == null || playerToken.isEmpty()) {
+            System.err.println("[Network] token is null or empty");
+            return;
+        }
+        System.out.println("[Network] token: "+ playerToken);
+
         // 2) 建 WS，連到你的 relay server
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
@@ -90,13 +96,12 @@ public class NetworkComponent extends Component {
                         new WSListener())
                 .whenComplete((ws, err) -> {
                     if (err != null) {
-                        // 连接失败
                         System.err.println("[Network] WS 連線失敗: " + err.getMessage());
                         err.printStackTrace();
                     } else {
-                        // 连接成功
                         this.ws = ws;
                         System.out.println("[Network] WS 已連線");
+                        System.out.println(FXGL.getWorldProperties().getString("token"));
                         createListener();
                     }
                 });
@@ -115,6 +120,7 @@ public class NetworkComponent extends Component {
                     ShotCommand sc = new ShotCommand(tick++, "send", matchData.getId(), mc);
                     sendCommand(sc);
                 });
+        System.out.println("test");
     }
 
     private void sendCommand(ShotCommand shotcommand) {
