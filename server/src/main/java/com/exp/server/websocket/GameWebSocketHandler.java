@@ -10,7 +10,6 @@ import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
 
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
@@ -35,7 +33,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // ConcurrentHashMap<>();
     // private static final Map<String, LocalDateTime> lastActiveTimeMap = new
     // ConcurrentHashMap<>();
-
     private final ObjectMapper mapper = new ObjectMapper();
 
     // 儲存所有連線的玩家（可依照房間編碼分群）
@@ -44,17 +41,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-
         String token = getQueryParam(session, "token");
 
-        System.out.println("token: " + token);
         if (token == null || token.isBlank()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("缺少 token"));
             return;
         }
 
         PlayerModel player = playerRepository.findByToken(token);
-
         if (player == null) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("無效 token"));
             return;
@@ -128,34 +122,33 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         JsonNode msg = mapper.readTree(message.getPayload());
         String type = msg.get("type").asText();
 
-        if ("send".equals(type)) {
-            // 取出 matchId 和 payload
-            String matchId = msg.get("matchId").asText();
-            JsonNode payload = msg.get("payload");
+        try {
+            if ("send".equals(type)) {
+                // Extract shot message as-is
+                String matchId = msg.get("matchId").asText();
 
-            // 查找對應 match
-            MatchModel match = matchRepository.findById(matchId).orElse(null);
-            if (match == null) return;
+                // Lookup both player tokens by matchId
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
 
-            String player1Id = match.getPlayer1Id();
-            String player2Id = match.getPlayer2Id();
+                String player1Id = match.getPlayer1Id();
+                String player2Id = match.getPlayer2Id();
 
-            // 將 type 改為 "shot"
-            ObjectNode newMessage = mapper.createObjectNode();
-            newMessage.put("type", "shot");
-            newMessage.put("matchId", matchId);
-            newMessage.set("payload", payload);
+                ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+                String modifiedMessage = mapper.writeValueAsString(msg);
 
-            String newMessageStr = mapper.writeValueAsString(newMessage);
+                // Send the message to both players (or only to the opponent)
+                GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+                GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
 
-            // 傳送給雙方
-            sendToToken(player1Id, newMessageStr);
-            sendToToken(player2Id, newMessageStr);
-
-            System.out.println("[Forwarded & Renamed] type=send → shot from " + sessionIdToTokenMap.get(session.getId()));
+                System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+            }
+        } catch (Exception e) {
+            System.out.println("處理訊息失敗：" + e.getMessage());
+            return;
         }
     }
-
 
     // if ("shot".equals(type)) {
     // String matchId = json.get("matchId").asText();
@@ -260,24 +253,24 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
 
     // public void broadcast(String matchId, String update) throws Exception {
-    //     MatchModel match = matchRepository.findById(matchId).orElse(null);
-    //     if (match == null) {
-    //         System.out.println("找不到 matchId：" + matchId);
-    //         return;
-    //     }
+    // MatchModel match = matchRepository.findById(matchId).orElse(null);
+    // if (match == null) {
+    // System.out.println("找不到 matchId：" + matchId);
+    // return;
+    // }
 
-    //     String player1Token = match.getPlayer1Id();
-    //     String player2Token = match.getPlayer2Id();
+    // String player1Token = match.getPlayer1Id();
+    // String player2Token = match.getPlayer2Id();
 
-    //     WebSocketSession session1 = tokenSessionMap.get(player1Token);
-    //     WebSocketSession session2 = tokenSessionMap.get(player2Token);
+    // WebSocketSession session1 = tokenSessionMap.get(player1Token);
+    // WebSocketSession session2 = tokenSessionMap.get(player2Token);
 
-    //     if (session1 != null && session1.isOpen()) {
-    //         session1.sendMessage(new TextMessage(update));
-    //     }
+    // if (session1 != null && session1.isOpen()) {
+    // session1.sendMessage(new TextMessage(update));
+    // }
 
-    //     if (session2 != null && session2.isOpen()) {
-    //         session2.sendMessage(new TextMessage(update));
-    //     }
+    // if (session2 != null && session2.isOpen()) {
+    // session2.sendMessage(new TextMessage(update));
+    // }
     // }
 }

@@ -62,6 +62,9 @@ public class ChessComponent extends Component {
                 id,
                 start.getX(), start.getY(),
                 end.getX(), end.getY()));
+        System.out.println("[ChessComponent] fireEvent success: " + id + " " +
+                start.getX() + ", " + start.getY() + " -> " +
+                end.getX() + ", " + end.getY());
     }
 
     public Point2D caculateImpulse(double startX, double startY, double endX, double endY) {

@@ -96,10 +96,8 @@ public class API {
         ObjectMapper mapper = new ObjectMapper();
         return Fetch.roomInfo(roomCode)
                 .thenApply(response -> {
-                    System.out.println("[DEBUG] roomInfo raw JSON = " + response);
                     try {
                         JsonNode root = mapper.readTree(response);
-                        // 注意这里字段一定要全小写开头
                         JsonNode jt = root.get("guestToken");
                         String guestToken = jt == null ? null : jt.asText();
                         System.out.println("取得 guestToken: " + guestToken);

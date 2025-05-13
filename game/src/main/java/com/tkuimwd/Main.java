@@ -62,7 +62,6 @@ public class Main extends GameApplication {
         scoreBoard.CreateScoreBoard();
     }
 
-
     @Override
     protected void initGame() {
         // new MouseTracker().tracker();
@@ -124,6 +123,7 @@ public class Main extends GameApplication {
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
 
         initNetwork();
+        
     }
 
     private void initNetwork() {

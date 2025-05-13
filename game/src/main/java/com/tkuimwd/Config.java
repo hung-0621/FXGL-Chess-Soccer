@@ -1,6 +1,7 @@
 package com.tkuimwd;
 
 import javafx.geometry.Point2D;
+import com.tkuimwd.api.dto.MatchData;
 
 public class Config {
     public static final int HEIGHT = 748; // 遊戲場景高度 scene + board
@@ -49,7 +50,8 @@ public class Config {
     public static final double MAX_FORCE = 200; // 可施加最大的力
     public static final double MAX_DISTANCE = 100; // 可拖曳的最大距離
 
-    // ✅ 登入後設定的 token / matchId（提供給 NetworkComponent）
-    public static String playerToken = "";
+    // 登入後設定的 token / matchId（提供給 NetworkComponent
+    public static MatchData matchData = new MatchData();
+    public static String token = "";
     public static String matchId = "";
 }

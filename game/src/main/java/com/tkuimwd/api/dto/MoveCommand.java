@@ -19,9 +19,7 @@ public class MoveCommand {
     @JsonProperty("endY")
     private double endY;
 
-    public MoveCommand() {
-        
-    }
+    public MoveCommand() {}
 
     public MoveCommand(String id, double startX, double startY, double endX, double endY) {
         this.id = id;

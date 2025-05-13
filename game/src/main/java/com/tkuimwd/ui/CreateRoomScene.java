@@ -154,8 +154,9 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(matchData -> {
                         if (matchData != null && matchData.getMatchStatus().equals("playing")) {
                             System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
-                            FXGL.getWorldProperties().setValue("matchData", matchData);
-                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer2Id());
+                            Config.matchData = matchData;
+                            Config.matchId = matchData.getId();
+                            Config.token = matchData.getPlayer2Id();
                             Platform.runLater(() -> isStarted = true);
                         }
                     })
@@ -289,8 +290,9 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(matchData -> {
                         if (matchData != null && matchData.getMatchStatus().equals("playing")) {
                             System.out.println("matchId=" + matchData.getId());
-                            FXGL.getWorldProperties().setValue("matchData", matchData);
-                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer1Id());
+                            Config.matchData = matchData;
+                            Config.matchId = matchData.getId();
+                            Config.token = matchData.getPlayer1Id();
                             Platform.runLater(() -> {
                                 isStarted = true;
                             });
