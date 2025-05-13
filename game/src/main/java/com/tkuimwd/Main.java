@@ -53,7 +53,7 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
-        // settings.setSceneFactory(new MenuFactory());
+        settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
@@ -62,12 +62,6 @@ public class Main extends GameApplication {
         scoreBoard.CreateScoreBoard();
     }
 
-    @Override
-    protected void initGameVars(Map<String, Object> vars) {
-        vars.put("score1", 0);
-        vars.put("score2", 0);
-        vars.put("yourTurn", true);
-    }
 
     @Override
     protected void initGame() {
@@ -134,7 +128,7 @@ public class Main extends GameApplication {
 
     private void initNetwork() {
         FXGL.entityBuilder()
-            .with(new NetworkComponent(Config.playerToken, Config.matchId))
+            .with(new NetworkComponent())
             .buildAndAttach();
     }
 

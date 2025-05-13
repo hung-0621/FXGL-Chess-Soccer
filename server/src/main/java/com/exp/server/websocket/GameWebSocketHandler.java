@@ -10,6 +10,7 @@ import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,6 +35,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // ConcurrentHashMap<>();
     // private static final Map<String, LocalDateTime> lastActiveTimeMap = new
     // ConcurrentHashMap<>();
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     // 儲存所有連線的玩家（可依照房間編碼分群）
@@ -42,14 +44,17 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+
         String token = getQueryParam(session, "token");
 
+        System.out.println("token: " + token);
         if (token == null || token.isBlank()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("缺少 token"));
             return;
         }
 
         PlayerModel player = playerRepository.findByToken(token);
+
         if (player == null) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("無效 token"));
             return;
@@ -123,34 +128,34 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         JsonNode msg = mapper.readTree(message.getPayload());
         String type = msg.get("type").asText();
 
-        try{
         if ("send".equals(type)) {
-            // Extract shot message as-is
+            // 取出 matchId 和 payload
             String matchId = msg.get("matchId").asText();
+            JsonNode payload = msg.get("payload");
 
-            // Lookup both player tokens by matchId
+            // 查找對應 match
             MatchModel match = matchRepository.findById(matchId).orElse(null);
-            if (match == null)
-                return;
+            if (match == null) return;
 
             String player1Id = match.getPlayer1Id();
             String player2Id = match.getPlayer2Id();
 
-            
-            ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
-            String modifiedMessage = mapper.writeValueAsString(msg);
+            // 將 type 改為 "shot"
+            ObjectNode newMessage = mapper.createObjectNode();
+            newMessage.put("type", "shot");
+            newMessage.put("matchId", matchId);
+            newMessage.set("payload", payload);
 
-            // Send the message to both players (or only to the opponent)
-            GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
-            GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+            String newMessageStr = mapper.writeValueAsString(newMessage);
 
-            System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
-        }
-        }catch (Exception e) {
-            System.out.println("處理訊息失敗：" + e.getMessage());
-            return;
+            // 傳送給雙方
+            sendToToken(player1Id, newMessageStr);
+            sendToToken(player2Id, newMessageStr);
+
+            System.out.println("[Forwarded & Renamed] type=send → shot from " + sessionIdToTokenMap.get(session.getId()));
         }
     }
+
 
     // if ("shot".equals(type)) {
     // String matchId = json.get("matchId").asText();

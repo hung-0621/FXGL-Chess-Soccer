@@ -86,7 +86,7 @@ public class NetworkComponent extends Component {
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
                 .buildAsync(
-                        URI.create("ws://localhost:8080/ws/game?token=" + playerToken),
+                        URI.create("ws://localhost:8080/ws/game?token=" + Config.playerToken),
                         new WSListener())
                 .whenComplete((ws, err) -> {
                     if (err != null) {

@@ -174,14 +174,14 @@ public class GameWebSocketHandler_00 extends TextWebSocketHandler {
                     return;
                 }
             
-                cmd.setSessionId(matchId);
+                // cmd.setSessionId(matchId);
             
-                if (!physicsEngineService.hasSession(matchId)) {
-                    List<EntityState> initStates = new GameService().initEntityStates();
-                    physicsEngineService.createSession(matchId, initStates);
-                }
+                // if (!physicsEngineService.hasSession(matchId)) {
+                //     List<EntityState> initStates = new GameService().initEntityStates();
+                //     physicsEngineService.createSession(matchId, initStates);
+                // }
             
-                physicsEngineService.enqueue(cmd);
+                // physicsEngineService.enqueue(cmd);
             
                 // 進球模擬（簡化處理）
                 if (isPlayer1) {

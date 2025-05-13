@@ -43,13 +43,13 @@ public class PhysicsEngineService {
         sessions.put(sessionId, session);
     }
 
-    /** 前端的 MoveCommand 轉到對應 Session */
-    public void enqueue(MoveCommand cmd) {
-        SimulationSession session = sessions.get(cmd.getSessionId());
-        if (session != null) {
-            session.enqueue(cmd);
-        }
-    }
+    // /** 前端的 MoveCommand 轉到對應 Session */
+    // public void enqueue(MoveCommand cmd) {
+    //     SimulationSession session = sessions.get(cmd.getSessionId());
+    //     if (session != null) {
+    //         session.enqueue(cmd);
+    //     }
+    // }
 
     /** 每 16ms 自動執行一次 world.step + broadcast */
     @Scheduled(fixedRate = 16)
