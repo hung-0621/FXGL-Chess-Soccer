@@ -119,6 +119,11 @@ public class LoginScene extends SubScene {
         API.getLoginInfo(node)
                 .thenAccept(token -> {
                     if (token != null) {
+
+                        // ✅ 儲存 token 進 Config
+                        Config.playerToken = token;
+                        System.out.println("[LoginScene] 儲存成功：token = " + Config.playerToken);
+
                         Platform.runLater(() -> {
                             Util.runLeaveAnimation(getContentRoot(), () -> {
                                 FXGL.getSceneService().popSubScene(); // main

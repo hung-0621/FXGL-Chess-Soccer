@@ -32,17 +32,21 @@ import com.tkuimwd.Config;
 
 public class NetworkComponent extends Component {
 
+    private final String playerToken;
+    private final String matchId;
+
     private WebSocket ws;
     private ObjectMapper mapper = new ObjectMapper();
     private Map<String, Entity> p1_chess_Map = new HashMap<>();
     private Map<String, Entity> idMap = new HashMap<>();
     private int tick = 0;
-    private int frameCount = 0;
-    private final int FRAMES_PER_UPDATE = 18; // 每6幀更新一次，約0.1秒(假設60FPS)
-    private final int UPDATE_INTERVAL_MS = 100; // 更新間隔時間(毫秒)
-    private String matchId = "681f4eb322f7275fd1de93d4"; // 這是測試用的matchId
-    private String playerToken = "3271341c-c863-4f2c-8d19-eb25ac33b7fd"; // 這是測試用的playerToken
+
     private final PropertyMap global_var = FXGL.getWorldProperties();
+
+    public NetworkComponent(String playerToken, String matchId) {
+        this.playerToken = playerToken;
+        this.matchId = matchId;
+    }
 
     @Override
     public void onAdded() {
@@ -85,13 +89,11 @@ public class NetworkComponent extends Component {
                         new WSListener())
                 .whenComplete((ws, err) -> {
                     if (err != null) {
-                        // 连接失败
                         System.err.println("[Network] WS 連線失敗: " + err.getMessage());
                         err.printStackTrace();
                     } else {
-                        // 连接成功
                         this.ws = ws;
-                        System.out.println("[Network] WS 已連線");
+                        System.out.println("[Network] WS 已連線 for token=" + playerToken);
                         createListener();
                     }
                 });

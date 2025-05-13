@@ -19,7 +19,7 @@ import com.exp.server.model.MatchModel;
 import com.exp.server.model.RoomModel;
 import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.RoomRepository;
-import com.exp.server.websocket.GameWebSocketHandler;
+import com.exp.server.websocket.GameWebSocketHandler_00;
 
 @RestController
 @RequestMapping("/room")
@@ -162,8 +162,6 @@ public class RoomController {
 
         room.setGuestStatus("準備");
         roomRepository.save(room);
-        
-        GameWebSocketHandler.sendToToken(room.getHostToken(), "{\"type\":\"guest_ready\"}");
 
         return ResponseEntity.ok("guest 已準備");
     }
@@ -219,11 +217,11 @@ public class RoomController {
     );
 
     if (savedMatch.getCurrentPlayerId().equals(savedMatch.getPlayer1Id())) {
-        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), gameStartMsg);
-        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), guestMsg);
+        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer1Id(), gameStartMsg);
+        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer2Id(), guestMsg);
     } else {
-        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), gameStartMsg);
-        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), guestMsg);
+        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer2Id(), gameStartMsg);
+        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer1Id(), guestMsg);
     }
 
     return ResponseEntity.ok(savedMatch);

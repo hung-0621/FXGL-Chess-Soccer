@@ -41,18 +41,6 @@ public class PlayerController {
         }
     }
 
-    // token 取得玩家 userName
-    @GetMapping("/token/{token}")
-    public ResponseEntity<?> getPlayerByToken(@PathVariable String token) {
-        PlayerModel player = playerRepository.findByToken(token);
-        if (player != null) {
-            return ResponseEntity.ok(player.getUserName());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("查無此 token：" + token);
-        }
-    }
-
     // 註冊
     @PostMapping("/register")
     public ResponseEntity<?> registerPlayer(@RequestBody PlayerModel player) {

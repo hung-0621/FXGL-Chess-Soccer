@@ -48,4 +48,8 @@ public class Config {
     // force
     public static final double MAX_FORCE = 200; // 可施加最大的力
     public static final double MAX_DISTANCE = 100; // 可拖曳的最大距離
+
+    // ✅ 登入後設定的 token / matchId（提供給 NetworkComponent）
+    public static String playerToken = "";
+    public static String matchId = "";
 }

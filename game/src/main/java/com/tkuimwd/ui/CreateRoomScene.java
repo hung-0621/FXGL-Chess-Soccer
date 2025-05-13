@@ -279,29 +279,14 @@ public class CreateRoomScene extends SubScene {
                         return null;
                     });
         } else {
-            ObjectNode node = JsonNodeFactory.instance.objectNode();
-            node.put("roomCode", roomCode);
-            node.put("token", hostToken);
-            API.getStart(node)
-                    .thenAccept(matchData -> {
-                        if (matchData != null) {
-                            System.out.println("matchId=" + matchData.getId());
+            System.out.println("開始遊戲");
 
-                            // **一定要切回 JavaFX Thread**，才能安全地呼 FXGL API
-                            Platform.runLater(() -> {
-                                isStarted = true;
-                            });
-                        } else {
-                            // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("無法啟動遊戲，後端回傳
-                            // null"),()->{});
-                        }
-                    })
-                    .exceptionally(ex -> {
-                        ex.printStackTrace();
-                        // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("開始遊戲失敗：" +
-                        // ex.getMessage()));
-                        return null;
-                    });
+            // ✅ 在這裡設定 Config 的資料（用於 FXGL Main）
+            Config.playerToken = hostToken;
+            Config.matchId = roomCode;
+            System.out.println("[CreateRoomScene] 設定成功：token=" + Config.playerToken + " matchId=" + Config.matchId);
+
+            FXGL.getGameController().startNewGame(); // 啟動 FXGL → Main.java → initNetwork()
         }
     }
 

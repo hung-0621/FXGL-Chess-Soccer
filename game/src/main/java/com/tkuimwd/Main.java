@@ -8,7 +8,6 @@ import com.almasb.fxgl.app.scene.SceneFactory;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
-import com.almasb.fxgl.ui.DialogFactoryService;
 import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
@@ -35,17 +34,6 @@ public class Main extends GameApplication {
     private static final int WIDTH = Config.WIDTH;
 
     @Override
-    protected void initGameVars(Map<String, Object> vars) {
-        vars.put("matchId", "");
-        vars.put("p1_token", "");
-        vars.put("p2_token", "");
-        vars.put("score1", 0);
-        vars.put("score2", 0);
-        vars.put("currentPlayerId", "");
-        vars.put("matchStatus", "");
-    }
-
-    @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(WIDTH);
         settings.setHeight(HEIGHT);
@@ -53,13 +41,20 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
-        settings.setSceneFactory(new MenuFactory());
+        // settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
     protected void initUI() {
         ScoreBoard scoreBoard = new ScoreBoard(WIDTH, 70);
         scoreBoard.CreateScoreBoard();
+    }
+
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        vars.put("score1", 0);
+        vars.put("score2", 0);
+        vars.put("yourTurn", true);
     }
 
     @Override
@@ -106,29 +101,48 @@ public class Main extends GameApplication {
         }
 
         // Spawn
-        FXGL.spawn("Background", new SpawnData(BACKGROUND_POSITION).put("backgroundModel", backgroundModel));
-        FXGL.spawn("Wall", new SpawnData(WALL_POSITION).put("wallModel", wallModel));
-        FXGL.spawn("FootBall",
-                new SpawnData(footBallModel.getX(), footBallModel.getY())
-                        .put("footBallModel", footBallModel));
-        for (int i = 0; i < p1_chess_model_list.length; i++) {
-            FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
-                    .put("chessModel", p1_chess_model_list[i]));
-        }
-        for (int i = 0; i < p2_chess_model_list.length; i++) {
-            FXGL.spawn("Chess", new SpawnData(p2_chess_model_list[i].getX(), p2_chess_model_list[i].getY())
-                    .put("chessModel", p2_chess_model_list[i]));
-        }
-        FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
-        FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
-        
-        initNetwork();
+        // Background
+FXGL.spawn("Background", new SpawnData(BACKGROUND_POSITION)
+    .put("id", "background")
+    .put("backgroundModel", backgroundModel));
+
+// Wall
+FXGL.spawn("Wall", new SpawnData(WALL_POSITION)
+    .put("id", "wall")
+    .put("wallModel", wallModel));
+
+// Football
+FXGL.spawn("FootBall", new SpawnData(footBallModel.getX(), footBallModel.getY())
+    .put("id", "football")  // 假設 ID 是這個
+    .put("footBallModel", footBallModel));
+
+// Chess
+for (int i = 0; i < p1_chess_model_list.length; i++) {
+    FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
+        .put("id", p1_chess_model_list[i].getId())
+        .put("chessModel", p1_chess_model_list[i]));
+}
+for (int i = 0; i < p2_chess_model_list.length; i++) {
+    FXGL.spawn("Chess", new SpawnData(p2_chess_model_list[i].getX(), p2_chess_model_list[i].getY())
+        .put("id", p2_chess_model_list[i].getId())
+        .put("chessModel", p2_chess_model_list[i]));
+}
+
+        // Goals
+        FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION)
+            .put("id", "p1_goal")
+            .put("goalModel", p1_goal_model));
+
+        FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION)
+            .put("id", "p2_goal")
+            .put("goalModel", p2_goal_model));
+
     }
 
     private void initNetwork() {
         FXGL.entityBuilder()
-                .with(new NetworkComponent())
-                .buildAndAttach();
+            .with(new NetworkComponent(Config.playerToken, Config.matchId))
+            .buildAndAttach();
     }
 
     @Override
