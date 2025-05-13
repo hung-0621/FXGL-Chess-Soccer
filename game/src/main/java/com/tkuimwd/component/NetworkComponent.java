@@ -39,7 +39,7 @@ public class NetworkComponent extends Component {
     private Map<String, Entity> idMap = new HashMap<>();
     private int tick = 0;
     private int frameCount = 0;
-    private final int FRAMES_PER_UPDATE = 18; // 每6幀更新一次，約0.1秒(假設60FPS)
+    private final int FRAMES_PER_UPDATE = 6; // 每6幀更新一次，約0.1秒(假設60FPS)
     private final int UPDATE_INTERVAL_MS = 100; // 更新間隔時間(毫秒)
 
     private final MatchData matchData = Config.matchData;
@@ -82,11 +82,11 @@ public class NetworkComponent extends Component {
             idMap.put(id, football);
         }
 
-        if(playerToken == null || playerToken.isEmpty()) {
+        if (playerToken == null || playerToken.isEmpty()) {
             System.err.println("[Network] token is null or empty");
             return;
         }
-        System.out.println("[Network] token: "+ playerToken);
+        System.out.println("[Network] token: " + playerToken);
 
         // 2) 建 WS，連到你的 relay server
         HttpClient.newHttpClient()
@@ -101,8 +101,7 @@ public class NetworkComponent extends Component {
                     } else {
                         this.ws = ws;
                         System.out.println("[Network] WS 已連線");
-                        System.out.println(FXGL.getWorldProperties().getString("token"));
-                        createListener();
+                        // createListener();
                     }
                 });
     }
@@ -112,74 +111,74 @@ public class NetworkComponent extends Component {
         FXGL.getEventBus().addEventHandler(
                 ChessReleaseEvent.CHESS_RELEASE,
                 e -> {
-                    MoveCommand mc = new MoveCommand(
-                            e.getId(),
-                            e.getStartX(), e.getStartY(),
-                            e.getEndX(), e.getEndY());
+                    // MoveCommand mc = new MoveCommand(
+                    // e.getId(),
+                    // e.getStartX(), e.getStartY(),
+                    // e.getEndX(), e.getEndY());
 
-                    ShotCommand sc = new ShotCommand(tick++, "send", matchData.getId(), mc);
-                    sendCommand(sc);
+                    // ShotCommand sc = new ShotCommand(tick++, "send", matchData.getId(), mc);
+                    // sendCommand(sc);
                 });
-        System.out.println("test");
     }
 
-    private void sendCommand(ShotCommand shotcommand) {
-        if (ws != null && !ws.isOutputClosed()) {
-            ObjectNode msg = mapper.createObjectNode()
-                    .put("type", shotcommand.getType())
-                    .put("matchId", shotcommand.getMatchId())
-                    .set("payload", mapper.valueToTree(shotcommand.getCommand()));
+    // private void sendCommand(ShotCommand shotcommand) {
+    // if (ws != null && !ws.isOutputClosed()) {
+    // ObjectNode msg = mapper.createObjectNode()
+    // .put("type", shotcommand.getType())
+    // .put("matchId", shotcommand.getMatchId())
+    // .set("payload", mapper.valueToTree(shotcommand.getCommand()));
 
-            System.out.println(msg.toString());
-            ws.sendText(msg.toString(), true);
-        }
-    }
-
-    // @Override
-    // public void onUpdate(double tpf) {
-    // // 每幀或固定間隔，collect 全部實體狀態並 broadcast
-    // frameCount++;
-    // if (frameCount >= FRAMES_PER_UPDATE) {
-    // State update = collectState(tick);
-    // if (!update.getStates().isEmpty()) {
-    // tick++;
-    // System.out.println(update.toString());
-    // sendStateUpdate(update);
-    // }
-    // frameCount = 0;
-    // }
-    // }
-
-    /** 把當前所有實體的位置打包 */
-    // private State collectState(int seq) {
-    // List<EntityState> list = new ArrayList<>();
-    // list.clear();
-    // idMap.forEach((id, e) -> {
-    // PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
-
-    // if (e != null) {
-    // double x = e.getX();
-    // double y = e.getY();
-    // double vx = phy.getLinearVelocity().getX();
-    // double vy = phy.getLinearVelocity().getY();
-    // if (vx != 0 || vy != 0) {
-    // list.add(new EntityState(id, x, y, vx, vy));
-    // }
-    // }
-    // });
-    // State update = new State(tick, "send", matchData.getId(), list);
-    // return update;
-    // }
-
-    // private void sendStateUpdate(State update) {
-    // if (ws != null && ws.isOutputClosed() == false) {
-    // ObjectNode msg = mapper.createObjectNode();
-    // msg.put("type", update.getType());
-    // msg.put("matchId", update.getMatchId());
-    // msg.set("payload", mapper.valueToTree(update));
+    // System.out.println(msg.toString());
     // ws.sendText(msg.toString(), true);
     // }
     // }
+
+    @Override
+    public void onUpdate(double tpf) {
+        // 每幀或固定間隔，collect 全部實體狀態並 broadcast
+        frameCount++;
+        if (frameCount >= FRAMES_PER_UPDATE) {
+            State update = collectState(tick);
+            if (!update.getStates().isEmpty()) {
+                tick++;
+                System.out.println(update.toString());
+                sendStateUpdate(update);
+            }
+            frameCount = 0;
+        }
+    }
+
+    /** 把當前所有實體的位置打包 */
+    private State collectState(int seq) {
+        List<EntityState> list = new ArrayList<>();
+        list.clear();
+        idMap.forEach((id, e) -> {
+            PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
+
+            if (e != null) {
+                double x = e.getX();
+                double y = e.getY();
+                double vx = phy.getLinearVelocity().getX();
+                double vy = phy.getLinearVelocity().getY();
+                if (vx != 0 || vy != 0) {
+                    list.add(new EntityState(id, x, y));
+                }
+            }
+        });
+        State update = new State(tick, "state_update", matchData.getId(), list);
+        return update;
+    }
+
+    private void sendStateUpdate(State update) {
+        if (ws != null && ws.isOutputClosed() == false) {
+            ObjectNode msg = mapper.createObjectNode();
+            msg.put("type", update.getType());
+            msg.put("matchId", update.getMatchId());
+            msg.put("tick", update.getTick());
+            msg.set("payload", mapper.valueToTree(update));
+            ws.sendText(msg.toString(), true);
+        }
+    }
 
     private class WSListener implements WebSocket.Listener {
         @Override
@@ -187,32 +186,33 @@ public class NetworkComponent extends Component {
                 CharSequence data, boolean last) {
             try {
                 JsonNode root = mapper.readTree(data.toString());
-                if ("shot".equals(root.get("type").asText())) {
-                    MoveCommand payload = mapper.treeToValue(
-                            root.get("payload"), MoveCommand.class);
+                if ("state_update".equals(root.get("type").asText())) {
+                    EntityState payload = mapper.treeToValue(
+                            root.get("payload"), EntityState.class);
                     // 收到別人的狀態 → 更新本地
                     FXGL.getGameTimer().runOnceAfter(() -> applyRemote(payload), Duration.ZERO);
-                } 
+                }
                 // else if ("turn_update".equals(root.get("type").asText())) {
-                //     boolean turn = root.get("yourTurn").asBoolean();
-                //     matchData.setWaitingForTurnSwitch(!turn);
-                //     matchData.setCurrentPlayerId(playerToken);
+                // boolean turn = root.get("yourTurn").asBoolean();
+                // matchData.setWaitingForTurnSwitch(!turn);
+                // matchData.setCurrentPlayerId(playerToken);
 
                 // } else if ("score_update".equals(root.get("type").asText())) {
-                //     int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
-                //     int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
-                //     matchData.setScore1(score1);
-                //     matchData.setScore2(score2);
-                //     applyReset();
+                // int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
+                // int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
+                // matchData.setScore1(score1);
+                // matchData.setScore2(score2);
+                // applyReset();
                 // } else if ("restore".equals(root.get("type").asText())) {
-                //     // int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
-                //     // int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
-                //     // global_var.setValue("score1", score1);
-                //     // global_var.setValue("score2", score2);
-                //     // global_var.setValue("yourTurn", root.get("yourTurn").asBoolean());
-                // } else if ("game_over".equals(root.get("type").asText())) { // ! fix send token
-                //     String winner = root.get("winner").asText();
-                //     matchData.setWinnerId(winner);
+                // // int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
+                // // int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
+                // // global_var.setValue("score1", score1);
+                // // global_var.setValue("score2", score2);
+                // // global_var.setValue("yourTurn", root.get("yourTurn").asBoolean());
+                // } else if ("game_over".equals(root.get("type").asText())) { // ! fix send
+                // token
+                // String winner = root.get("winner").asText();
+                // matchData.setWinnerId(winner);
                 // }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -221,37 +221,32 @@ public class NetworkComponent extends Component {
         }
     }
 
-    private void applyRemote(MoveCommand payload) {
-        double startX = payload.getStartX();
-        double startY = payload.getStartY();
-        double endX = payload.getEndX();
-        double endY = payload.getEndY();
-
+    private void applyRemote(EntityState payload) {
+        double x = payload.getX();
+        double y = payload.getY();
         Entity e = idMap.get(payload.getId());
-        ChessComponent chess = e.getComponent(ChessComponent.class);
-        Point2D impulse =  chess.caculateImpulse(startX, startY, endX, endY);
-        chess.applyImpulse(impulse); 
+        e.setPosition(x, y);
     }
 
     // 用來處理進球後重置初始位置
     // private void applyReset() {
-    //     double[][] pi_chess_position = Config.player1_chess_position;
-    //     double[][] p2_chess_position = Config.player2_chess_position;
-    //     Point2D football_position = Config.FOOTBALL_POSITION;
+    // double[][] pi_chess_position = Config.player1_chess_position;
+    // double[][] p2_chess_position = Config.player2_chess_position;
+    // Point2D football_position = Config.FOOTBALL_POSITION;
 
-    //     idMap.forEach((id, e) -> {
-    //         if (id.startsWith("p1_chess")) {
-    //             int index = Integer.parseInt(id.substring(9));
-    //             e.setPosition(pi_chess_position[index][0], pi_chess_position[index][1]);
-    //             e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    //         } else if (id.startsWith("p2_chess")) {
-    //             int index = Integer.parseInt(id.substring(9));
-    //             e.setPosition(p2_chess_position[index][0], p2_chess_position[index][1]);
-    //             e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    //         } else if (id.equals("football")) {
-    //             e.setPosition(football_position.getX(), football_position.getY());
-    //             e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    //         }
-    //     });
+    // idMap.forEach((id, e) -> {
+    // if (id.startsWith("p1_chess")) {
+    // int index = Integer.parseInt(id.substring(9));
+    // e.setPosition(pi_chess_position[index][0], pi_chess_position[index][1]);
+    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+    // } else if (id.startsWith("p2_chess")) {
+    // int index = Integer.parseInt(id.substring(9));
+    // e.setPosition(p2_chess_position[index][0], p2_chess_position[index][1]);
+    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+    // } else if (id.equals("football")) {
+    // e.setPosition(football_position.getX(), football_position.getY());
+    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+    // }
+    // });
     // }
 }
