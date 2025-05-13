@@ -1,14 +1,21 @@
 package com.tkuimwd.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tkuimwd.type.EntityType;
 
 // /api/game/state
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityState {
+    @JsonProperty("id")
     String id;
-    // String session_id; //!
-    // EntityType type; //!
+    // @JsonProperty("session_id")
+    // String sessionId;
+    // @JsonProperty("type")
+    // EntityType type;
+    @JsonProperty("x")
     double x;
+    @JsonProperty("y")
     double y;
     // double vx;
     // double vy;
@@ -21,6 +28,10 @@ public class EntityState {
     //     this.vx = vx;
     //     this.vy = vy;
     // }
+
+    public EntityState(){
+
+    }
 
     // websocket
     public EntityState(String id, double x, double y) {

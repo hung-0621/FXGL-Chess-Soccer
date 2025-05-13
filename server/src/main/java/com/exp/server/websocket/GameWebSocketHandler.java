@@ -123,27 +123,61 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String type = msg.get("type").asText();
 
         try {
-            if ("send".equals(type)) {
-                // Extract shot message as-is
-                String matchId = msg.get("matchId").asText();
+            // if ("send".equals(type)) {
+            //     // Extract shot message as-is
+            //     String matchId = msg.get("matchId").asText();
 
-                // Lookup both player tokens by matchId
-                MatchModel match = matchRepository.findById(matchId).orElse(null);
-                if (match == null)
-                    return;
+            //     // Lookup both player tokens by matchId
+            //     MatchModel match = matchRepository.findById(matchId).orElse(null);
+            //     if (match == null)
+            //         return;
 
-                String player1Id = match.getPlayer1Id();
-                String player2Id = match.getPlayer2Id();
+            //     String player1Id = match.getPlayer1Id();
+            //     String player2Id = match.getPlayer2Id();
 
-                ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
-                String modifiedMessage = mapper.writeValueAsString(msg);
+            //     ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+            //     String modifiedMessage = mapper.writeValueAsString(msg);
 
-                // Send the message to both players (or only to the opponent)
-                GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
-                GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+            //     // Send the message to both players (or only to the opponent)
+            //     GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+            //     GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
 
-                System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+            //     System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+            // }
+
+            if ("state_update".equals(type)) {
+            String rawMessage = message.getPayload();
+            String matchId = msg.get("matchId").asText();
+            MatchModel match = matchRepository.findById(matchId).orElse(null);
+            if (match == null)
+                return;
+
+            // 找出目前這個 session 的 token
+            String senderToken = sessionIdToTokenMap.get(session.getId());
+            // System.out.println("senderToken = " + senderToken);
+            if (senderToken == null)
+                return;
+
+            String opponentToken;
+            if (senderToken.equals(match.getPlayer1Id())) {
+                // System.out.println("player2Id = " + match.getPlayer2Id());
+                opponentToken = match.getPlayer2Id();
+            } else if (senderToken.equals(match.getPlayer2Id())) {
+                // System.out.println("player1Id = " + match.getPlayer1Id());
+                opponentToken = match.getPlayer1Id();
+            } else {
+                System.out.println("找不到對手的 token");
+                // 非這場對局的玩家，不處理
+                return;
             }
+
+            System.out.println(" rawMessage = " + rawMessage);
+
+            sendToToken(opponentToken, rawMessage);
+            System.out.println("[Forwarded] state_update from " + senderToken + " to opponent " + opponentToken);
+        }
+
+
         } catch (Exception e) {
             System.out.println("處理訊息失敗：" + e.getMessage());
             return;
