@@ -10,21 +10,14 @@ import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.exp.server.service.simulation.dto.MoveCommand;
-import com.exp.server.service.simulation.dto.EntityState;
-import com.exp.server.service.simulation.PhysicsEngineService;
-import com.exp.server.service.simulation.GameService;
-import com.exp.server.repository.RoomRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import java.time.Duration;
+
 
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
@@ -35,16 +28,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     private MatchRepository matchRepository;
 
-    @Autowired
-    private PhysicsEngineService physicsEngineService;
-
-    @Autowired
-    private RoomRepository roomRepository;
-
     private static final Map<String, WebSocketSession> tokenSessionMap = new ConcurrentHashMap<>();
     private static final Map<String, String> sessionIdToTokenMap = new ConcurrentHashMap<>();
-    private static final Map<String, LocalDateTime> disconnectTimeMap = new ConcurrentHashMap<>();
-    private static final Map<String, LocalDateTime> lastActiveTimeMap = new ConcurrentHashMap<>();
+    // private static final Map<String, LocalDateTime> disconnectTimeMap = new
+    // ConcurrentHashMap<>();
+    // private static final Map<String, LocalDateTime> lastActiveTimeMap = new
+    // ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
 
     // 儲存所有連線的玩家（可依照房間編碼分群）
@@ -71,12 +60,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         tokenSessionMap.put(token, session);
         sessionIdToTokenMap.put(session.getId(), token);
 
-        disconnectTimeMap.remove(token);
+        // disconnectTimeMap.remove(token);
         // 玩家斷線後重新連線
         List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
         List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
 
-        lastActiveTimeMap.put(token, LocalDateTime.now());
+        // lastActiveTimeMap.put(token, LocalDateTime.now());
 
         MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
                 .filter(m -> "playing".equals(m.getMatchStatus()))
@@ -97,7 +86,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String token = sessionIdToTokenMap.remove(session.getId());
         if (token != null) {
             tokenSessionMap.remove(token);
-            disconnectTimeMap.put(token, LocalDateTime.now());
+            // disconnectTimeMap.put(token, LocalDateTime.now());
         }
 
         System.out.println("玩家離線: " + session.getId());
@@ -129,70 +118,116 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        try {
-            JsonNode json = mapper.readTree(message.getPayload());
-            String type = json.get("type").asText();
+    public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-            if ("shot".equals(type)) {
-                String matchId = json.get("matchId").asText();
-                MatchModel match = matchRepository.findById(matchId).orElse(null);
-                if (match == null)
-                    return;
+        JsonNode msg = mapper.readTree(message.getPayload());
+        String type = msg.get("type").asText();
 
-                String senderToken = getQueryParam(session, "token");
-                if (!match.getCurrentPlayerId().equals(senderToken)) {
-                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
-                    return;
-                }
+        try{
+        if ("send".equals(type)) {
+            // Extract shot message as-is
+            String matchId = msg.get("matchId").asText();
 
-                // 檢查是否已經操作過棋子
-                if (match.isHasMovedThisTurn()) {
-                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"你本回合已操作過一枚棋子\"}");
-                    return;
-                }
+            // Lookup both player tokens by matchId
+            MatchModel match = matchRepository.findById(matchId).orElse(null);
+            if (match == null)
+                return;
 
-                JsonNode payload = json.get("payload");
+            String player1Id = match.getPlayer1Id();
+            String player2Id = match.getPlayer2Id();
 
-                String chessId = payload.get("id").asText();
-                boolean isPlayer1 = senderToken.equals(match.getPlayer1Id());
-                boolean isValid = (isPlayer1 && chessId.startsWith("p1_")) || (!isPlayer1 && chessId.startsWith("p2_"));
+            
+            ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+            String modifiedMessage = mapper.writeValueAsString(msg);
 
-                if (!isValid) {
-                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不能操作對手的棋子\"}");
-                    return;
-                }
+            // Send the message to both players (or only to the opponent)
+            GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+            GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
 
-                MoveCommand cmd;
-                try {
-                    cmd = mapper.readValue(payload.toString(), MoveCommand.class);
-                } catch (Exception ex) {
-                    session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"MoveCommand 解析失敗\"}"));
-                    return;
-                }
-
-                cmd.setSessionId(matchId);
-
-                if (!physicsEngineService.hasSession(matchId)) {
-                    List<EntityState> initStates = new GameService().initEntityStates();
-                    physicsEngineService.createSession(matchId, initStates);
-                }
-
-                physicsEngineService.enqueue(cmd);
-
-                // 標記這回合已操作
-                match.setHasMovedThisTurn(true);
-
-                match.setWaitingForTurnSwitch(true);
-                matchRepository.save(match);
-            }
-
-        } catch (Exception e) {
-            System.out.println("全域 JSON解析失敗：" + e.getMessage());
-            e.printStackTrace();
-            session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"JSON格式錯誤\"}"));
+            System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+        }
+        }catch (Exception e) {
+            System.out.println("處理訊息失敗：" + e.getMessage());
+            return;
         }
     }
+
+    // if ("shot".equals(type)) {
+    // String matchId = json.get("matchId").asText();
+    // MatchModel match = matchRepository.findById(matchId).orElse(null);
+    // if (match == null) return;
+
+    // String senderToken = getQueryParam(session, "token");
+    // if (!match.getCurrentPlayerId().equals(senderToken)) {
+    // sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
+    // return;
+    // }
+
+    // JsonNode payload = json.get("payload");
+
+    // // 判斷 chessId 是否是自己的棋子（暫略）
+    // String chessId = payload.get("id").asText();
+
+    // boolean isPlayer1 = senderToken.equals(match.getPlayer1Id());
+    // boolean isValid = (isPlayer1 && chessId.startsWith("p1_")) || (!isPlayer1 &&
+    // chessId.startsWith("p2_"));
+
+    // // System.out.println("收到 chessId = " + chessId);
+    // // System.out.println("isPlayer1 = " + isPlayer1);
+    // // System.out.println("isValid = " + isValid);
+
+    // if (!isValid) {
+    // sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不能操作對手的棋子\"}");
+    // return;
+    // }
+
+    // MoveCommand cmd;
+
+    // // 加一個限制最大最小力
+    // try {
+    // cmd = mapper.readValue(payload.toString(), MoveCommand.class);
+    // } catch (Exception ex) {
+    // session.sendMessage(new
+    // TextMessage("{\"type\":\"error\",\"message\":\"MoveCommand 解析失敗\"}"));
+    // return;
+    // }
+
+    // cmd.setSessionId(matchId);
+
+    // if (!physicsEngineService.hasSession(matchId)) {
+    // List<EntityState> initStates = new GameService().initEntityStates();
+    // physicsEngineService.createSession(matchId, initStates);
+    // }
+
+    // physicsEngineService.enqueue(cmd);
+
+    // // 進球模擬（簡化處理）
+    // if (isPlayer1) {
+    // match.setScore1(match.getScore1() + 1);
+    // } else {
+    // match.setScore2(match.getScore2() + 1);
+    // }
+
+    // if (match.getScore1() >= 7 || match.getScore2() >= 7) {
+    // match.setMatchStatus("finished");
+    // match.setEndedAt(LocalDateTime.now());
+    // match.setWinnerId(match.getScore1() >= 7 ? match.getPlayer1Id() :
+    // match.getPlayer2Id());
+    // matchRepository.save(match);
+
+    // roomRepository.deleteById(match.getRoomId());
+
+    // String msg = String.format("{\"type\":\"game_over\",\"winner\":\"%s\"}",
+    // match.getWinnerId());
+    // sendToToken(match.getPlayer1Id(), msg);
+    // sendToToken(match.getPlayer2Id(), msg);
+    // return;
+    // }
+
+    // // 等待物理結束後自動切換回合
+    // match.setWaitingForTurnSwitch(true);
+    // matchRepository.save(match);
+    // }
 
     // 系統測試中 為求方便暫時關閉
     // @Scheduled(fixedRate = 1000)
@@ -219,69 +254,25 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
     // }
 
-    @Scheduled(fixedRate = 1000)
-    public void checkTimeouts() {
-        LocalDateTime now = LocalDateTime.now();
+    // public void broadcast(String matchId, String update) throws Exception {
+    //     MatchModel match = matchRepository.findById(matchId).orElse(null);
+    //     if (match == null) {
+    //         System.out.println("找不到 matchId：" + matchId);
+    //         return;
+    //     }
 
-        for (Map.Entry<String, LocalDateTime> entry : GameWebSocketHandler.disconnectTimeMap.entrySet()) {
-            String token = entry.getKey();
-            LocalDateTime disconnectTime = entry.getValue();
+    //     String player1Token = match.getPlayer1Id();
+    //     String player2Token = match.getPlayer2Id();
 
-            if (Duration.between(disconnectTime, now).getSeconds() >= 60) {
-                // 找到正在進行的對局
-                List<MatchModel> matchesAsP1 = matchRepository.findAllByPlayer1Id(token);
-                List<MatchModel> matchesAsP2 = matchRepository.findAllByPlayer2Id(token);
+    //     WebSocketSession session1 = tokenSessionMap.get(player1Token);
+    //     WebSocketSession session2 = tokenSessionMap.get(player2Token);
 
-                MatchModel match = Stream.concat(matchesAsP1.stream(), matchesAsP2.stream())
-                        .filter(m -> "playing".equals(m.getMatchStatus()))
-                        .findFirst()
-                        .orElse(null);
+    //     if (session1 != null && session1.isOpen()) {
+    //         session1.sendMessage(new TextMessage(update));
+    //     }
 
-                if (match != null) {
-                    String winner = token.equals(match.getPlayer1Id()) ? match.getPlayer2Id() : match.getPlayer1Id();
-
-                    match.setMatchStatus("finished");
-                    match.setWinnerId(winner);
-                    match.setEndedAt(now);
-                    matchRepository.save(match);
-
-                    // 加入刪除房間
-                    roomRepository.deleteById(match.getRoomId());
-
-                    String msg = String.format(
-                            "{\"type\":\"game_over\",\"winner\":\"%s\",\"reason\":\"disconnect\"}",
-                            winner);
-
-                    GameWebSocketHandler.sendToToken(match.getPlayer1Id(), msg);
-                    GameWebSocketHandler.sendToToken(match.getPlayer2Id(), msg);
-
-                    System.out.println("玩家斷線超過 60 秒，自動判定敗方為：" + token);
-
-                    GameWebSocketHandler.disconnectTimeMap.remove(token);
-                }
-            }
-        }
-    }
-
-    public void broadcast(String matchId, String update) throws Exception {
-        MatchModel match = matchRepository.findById(matchId).orElse(null);
-        if (match == null) {
-            System.out.println("找不到 matchId：" + matchId);
-            return;
-        }
-
-        String player1Token = match.getPlayer1Id();
-        String player2Token = match.getPlayer2Id();
-
-        WebSocketSession session1 = tokenSessionMap.get(player1Token);
-        WebSocketSession session2 = tokenSessionMap.get(player2Token);
-
-        if (session1 != null && session1.isOpen()) {
-            session1.sendMessage(new TextMessage(update));
-        }
-
-        if (session2 != null && session2.isOpen()) {
-            session2.sendMessage(new TextMessage(update));
-        }
-    }
+    //     if (session2 != null && session2.isOpen()) {
+    //         session2.sendMessage(new TextMessage(update));
+    //     }
+    // }
 }
