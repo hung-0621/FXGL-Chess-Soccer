@@ -9,6 +9,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.ui.DialogFactoryService;
+import com.tkuimwd.api.dto.MatchData;
 import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
@@ -36,13 +37,12 @@ public class Main extends GameApplication {
 
     @Override
     protected void initGameVars(Map<String, Object> vars) {
-        vars.put("matchId", "");
-        vars.put("p1_token", "");
-        vars.put("p2_token", "");
-        vars.put("score1", 0);
-        vars.put("score2", 0);
-        vars.put("currentPlayerId", "");
-        vars.put("matchStatus", "");
+        vars.put("token", "");
+        vars.put("matchData", new MatchData());
+        vars.put("p1_name", "Player 1");
+        vars.put("p2_name", "Player 2");
+        vars.put("p1_score", 0);
+        vars.put("p2_score", 0);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class Main extends GameApplication {
         settings.setVersion("v1.1");
         settings.setDeveloperMenuEnabled(true);
         settings.setMainMenuEnabled(true);
-        settings.setSceneFactory(new MenuFactory());
+        // settings.setSceneFactory(new MenuFactory());
     }
 
     @Override
@@ -121,7 +121,7 @@ public class Main extends GameApplication {
         }
         FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
-        
+
         initNetwork();
     }
 

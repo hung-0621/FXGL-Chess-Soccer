@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 public class Fetch {
-    private static final String BASE_URL = "http://192.168.4.104:8080";
+    private static final String BASE_URL = "http://192.168.119.9:8080";
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
     // 建立共用的 HttpClient

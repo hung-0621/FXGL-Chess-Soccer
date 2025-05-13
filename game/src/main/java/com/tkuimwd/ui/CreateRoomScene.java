@@ -5,6 +5,7 @@ import com.almasb.fxgl.scene.SubScene;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
+import com.tkuimwd.api.API;
 import com.tkuimwd.api.dto.MatchData;
 
 import javafx.application.Platform;
@@ -153,6 +154,8 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(matchData -> {
                         if (matchData != null && matchData.getMatchStatus().equals("playing")) {
                             System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
+                            FXGL.getWorldProperties().setValue("matchData", matchData);
+                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer2Id());
                             Platform.runLater(() -> isStarted = true);
                         }
                     })
@@ -284,10 +287,10 @@ public class CreateRoomScene extends SubScene {
             node.put("token", hostToken);
             API.getStart(node)
                     .thenAccept(matchData -> {
-                        if (matchData != null) {
+                        if (matchData != null && matchData.getMatchStatus().equals("playing")) {
                             System.out.println("matchId=" + matchData.getId());
-
-                            // **一定要切回 JavaFX Thread**，才能安全地呼 FXGL API
+                            FXGL.getWorldProperties().setValue("matchData", matchData);
+                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer1Id());
                             Platform.runLater(() -> {
                                 isStarted = true;
                             });
