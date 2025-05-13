@@ -2,15 +2,15 @@ package com.tkuimwd.api.dto;
 
 import java.util.List;
 
-public class StateUpdate {
+public class State {
     private final String type;
     private final String matchId;
     int tick;
     List<EntityState> states;
 
-    public StateUpdate(int tick, String matchId, List<EntityState> states) {
+    public State(int tick, String type, String matchId, List<EntityState> states) {
         this.tick = tick;
-        this.type = "state_update";
+        this.type = type;
         this.matchId = matchId;
         this.states = states;
     }

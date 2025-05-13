@@ -8,6 +8,8 @@ import com.almasb.fxgl.app.scene.SceneFactory;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.ui.DialogFactoryService;
+import com.tkuimwd.api.dto.MatchData;
 import com.tkuimwd.component.NetworkComponent;
 import com.tkuimwd.factory.BackgroundFactory;
 import com.tkuimwd.factory.ChessFactory;
@@ -32,6 +34,16 @@ public class Main extends GameApplication {
 
     private static final int HEIGHT = Config.HEIGHT;
     private static final int WIDTH = Config.WIDTH;
+
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        vars.put("token", "");
+        vars.put("matchData", new MatchData());
+        vars.put("p1_name", "Player 1");
+        vars.put("p2_name", "Player 2");
+        vars.put("p1_score", 0);
+        vars.put("p2_score", 0);
+    }
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -101,42 +113,23 @@ public class Main extends GameApplication {
         }
 
         // Spawn
-        // Background
-FXGL.spawn("Background", new SpawnData(BACKGROUND_POSITION)
-    .put("id", "background")
-    .put("backgroundModel", backgroundModel));
+        FXGL.spawn("Background", new SpawnData(BACKGROUND_POSITION).put("backgroundModel", backgroundModel));
+        FXGL.spawn("Wall", new SpawnData(WALL_POSITION).put("wallModel", wallModel));
+        FXGL.spawn("FootBall",
+                new SpawnData(footBallModel.getX(), footBallModel.getY())
+                        .put("footBallModel", footBallModel));
+        for (int i = 0; i < p1_chess_model_list.length; i++) {
+            FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
+                    .put("chessModel", p1_chess_model_list[i]));
+        }
+        for (int i = 0; i < p2_chess_model_list.length; i++) {
+            FXGL.spawn("Chess", new SpawnData(p2_chess_model_list[i].getX(), p2_chess_model_list[i].getY())
+                    .put("chessModel", p2_chess_model_list[i]));
+        }
+        FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION).put("goalModel", p1_goal_model));
+        FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
 
-// Wall
-FXGL.spawn("Wall", new SpawnData(WALL_POSITION)
-    .put("id", "wall")
-    .put("wallModel", wallModel));
-
-// Football
-FXGL.spawn("FootBall", new SpawnData(footBallModel.getX(), footBallModel.getY())
-    .put("id", "football")  // 假設 ID 是這個
-    .put("footBallModel", footBallModel));
-
-// Chess
-for (int i = 0; i < p1_chess_model_list.length; i++) {
-    FXGL.spawn("Chess", new SpawnData(p1_chess_model_list[i].getX(), p1_chess_model_list[i].getY())
-        .put("id", p1_chess_model_list[i].getId())
-        .put("chessModel", p1_chess_model_list[i]));
-}
-for (int i = 0; i < p2_chess_model_list.length; i++) {
-    FXGL.spawn("Chess", new SpawnData(p2_chess_model_list[i].getX(), p2_chess_model_list[i].getY())
-        .put("id", p2_chess_model_list[i].getId())
-        .put("chessModel", p2_chess_model_list[i]));
-}
-
-        // Goals
-        FXGL.spawn("Goal", new SpawnData(P1_GOAL_POSITION)
-            .put("id", "p1_goal")
-            .put("goalModel", p1_goal_model));
-
-        FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION)
-            .put("id", "p2_goal")
-            .put("goalModel", p2_goal_model));
-
+        initNetwork();
     }
 
     private void initNetwork() {

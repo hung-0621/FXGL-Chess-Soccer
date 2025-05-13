@@ -18,7 +18,7 @@ public class ChessComponent extends Component {
     private Point2D start;
     private Point2D end;
     private Point2D speed;
-    // private PhysicsComponent physics;
+    private PhysicsComponent physics;
     private Circle chess;
 
     private double maxForce; // 可施加最大的力
@@ -30,10 +30,10 @@ public class ChessComponent extends Component {
 
     @Override
     public void onAdded() {
-        // physics = getEntity().getComponent(PhysicsComponent.class);
+        physics = getEntity().getComponent(PhysicsComponent.class);
         chess = (Circle) getEntity().getViewComponent().getChildren().get(0);
-        // maxForce = Config.MAX_FORCE;
-        // maxDistance = Config.MAX_DISTANCE;
+        maxForce = Config.MAX_FORCE;
+        maxDistance = Config.MAX_DISTANCE;
 
         chess.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> onPress());
         chess.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> onRelease());
@@ -41,10 +41,10 @@ public class ChessComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        // speed = physics.getLinearVelocity();
-        // if(speed.magnitude() > 0 && speed.magnitude() < 30){
-        // physics.setLinearVelocity(Point2D.ZERO);
-        // }
+        speed = physics.getLinearVelocity();
+        if (speed.magnitude() > 0 && speed.magnitude() < 30) {
+            physics.setLinearVelocity(Point2D.ZERO);
+        }
     }
 
     public void onPress() {
@@ -62,27 +62,32 @@ public class ChessComponent extends Component {
                 id,
                 start.getX(), start.getY(),
                 end.getX(), end.getY()));
+    }
 
-        // 距離跟作用力
-        // double dist = start.distance(end);
-        // double dist_percentage = Math.min(dist / maxDistance, 1.0);
-        // double force = dist_percentage * maxForce;
+    public Point2D caculateImpulse(double startX, double startY, double endX, double endY) {
+        
+        Point2D start = new Point2D(startX, startY);
+        Point2D end = new Point2D(endX, endY);
+
+        // 計算衝量
+        double dist = start.distance(end);
+        double dist_percentage = Math.min(dist / maxDistance, 1.0);
+        double force = dist_percentage * maxForce;
 
         // 方向跟衝量
-        // Point2D direction = start.subtract(end).normalize();
-        // Point2D impulse = direction.multiply(force);
-        // System.out.println("Mouse Released on Chess: ( " + end.getX() + ", " +
-        // end.getY() + " )");
-        // System.out.println("Impulse: ( " + impulse.getX() + ", " + impulse.getY() + "
-        // )");
+        Point2D direction = start.subtract(end).normalize();
+        Point2D impulse = direction.multiply(force);
+        return impulse;
+    }
 
-        // Vec2 centerVec = physics.getBody().getWorldCenter();
-        // Point2D center = new Point2D(centerVec.x, centerVec.y);
+    public void applyImpulse(Point2D impulse){
+        Vec2 centerVec = physics.getBody().getWorldCenter();
+        Point2D center = new Point2D(centerVec.x, centerVec.y);
 
-        // physics.applyLinearImpulse(
-        // impulse,
-        // center,
-        // true);
+        physics.applyLinearImpulse(
+                impulse,
+                center,
+                true);
     }
 
     public String getId() {

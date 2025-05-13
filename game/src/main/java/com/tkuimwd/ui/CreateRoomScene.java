@@ -5,6 +5,7 @@ import com.almasb.fxgl.scene.SubScene;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
+import com.tkuimwd.api.API;
 import com.tkuimwd.api.dto.MatchData;
 
 import javafx.application.Platform;
@@ -153,6 +154,8 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(matchData -> {
                         if (matchData != null && matchData.getMatchStatus().equals("playing")) {
                             System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
+                            FXGL.getWorldProperties().setValue("matchData", matchData);
+                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer2Id());
                             Platform.runLater(() -> isStarted = true);
                         }
                     })
@@ -279,14 +282,29 @@ public class CreateRoomScene extends SubScene {
                         return null;
                     });
         } else {
-            System.out.println("開始遊戲");
-
-            // ✅ 在這裡設定 Config 的資料（用於 FXGL Main）
-            Config.playerToken = hostToken;
-            Config.matchId = roomCode;
-            System.out.println("[CreateRoomScene] 設定成功：token=" + Config.playerToken + " matchId=" + Config.matchId);
-
-            FXGL.getGameController().startNewGame(); // 啟動 FXGL → Main.java → initNetwork()
+            ObjectNode node = JsonNodeFactory.instance.objectNode();
+            node.put("roomCode", roomCode);
+            node.put("token", hostToken);
+            API.getStart(node)
+                    .thenAccept(matchData -> {
+                        if (matchData != null && matchData.getMatchStatus().equals("playing")) {
+                            System.out.println("matchId=" + matchData.getId());
+                            FXGL.getWorldProperties().setValue("matchData", matchData);
+                            FXGL.getWorldProperties().setValue("token", matchData.getPlayer1Id());
+                            Platform.runLater(() -> {
+                                isStarted = true;
+                            });
+                        } else {
+                            // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("無法啟動遊戲，後端回傳
+                            // null"),()->{});
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        ex.printStackTrace();
+                        // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("開始遊戲失敗：" +
+                        // ex.getMessage()));
+                        return null;
+                    });
         }
     }
 
