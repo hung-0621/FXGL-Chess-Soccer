@@ -3,3 +3,5 @@
 /system/
 /game/target/
 /game/src/test/
+.env
+.DS_Store

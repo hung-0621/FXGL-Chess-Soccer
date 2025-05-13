@@ -1,10 +1,11 @@
 package com.tkuimwd;
 
 import javafx.geometry.Point2D;
+import com.tkuimwd.api.dto.MatchData;
 
 public class Config {
-    static final int HEIGHT = 748; // 遊戲場景高度 scene + board
-    static final int WIDTH = 1020; // 遊戲場景寬度
+    public static final int HEIGHT = 748; // 遊戲場景高度 scene + board
+    public static final int WIDTH = 1020; // 遊戲場景寬度
     static final String TITLE = "Chess Soccer"; // 遊戲標題
     
     // background init
@@ -12,21 +13,21 @@ public class Config {
     static final String IMAGE_PATH = "/field.jpg"; // 遊戲場景背景圖片路徑
 
     // wall 的初始位置
-    static final Point2D WALL_POSITION= new Point2D(0, 70);
-    static final double[][] WALL_EDGES = {
+    public static final Point2D WALL_POSITION= new Point2D(0, 70);
+    public static final double[][] WALL_EDGES = {
             { 61, 54 }, { 61, 254  }, { 29, 254 }, { 29, 433 },
             { 61, 433 }, { 61, 651 }, { 958, 651 }, { 958, 433 },
             { 991, 433 }, { 991, 254 }, { 958, 254 }, { 958, 54 },
     };
 
     // football 的初始位置
-    static final Point2D FOOTBALL_POSITION = new Point2D(511, 423);
+    public static final Point2D FOOTBALL_POSITION = new Point2D(511, 423);
 
     // chess 的初始位置
-    private static double[][] player1_chess_position = {
+    public static double[][] player1_chess_position = {
             { 160, 420 }, { 265, 305 }, { 265, 520 },
     };
-    private static double[][] player2_chess_position = {
+    public static double[][] player2_chess_position = {
             { 850, 420 }, { 750, 305 }, { 750, 520 },
     };
     static final Point2D[] P1_CHESS_POSITION = new Point2D[player1_chess_position.length];
@@ -44,4 +45,13 @@ public class Config {
     static final double GOAL_HEIGHT = 179; // 球門高度
     static final Point2D P1_GOAL_POSITION = new Point2D(29, 324);
     static final Point2D P2_GOAL_POSITION = new Point2D(958, 324);
+
+    // force
+    public static final double MAX_FORCE = 200; // 可施加最大的力
+    public static final double MAX_DISTANCE = 100; // 可拖曳的最大距離
+
+    // 登入後設定的 token / matchId（提供給 NetworkComponent
+    public static MatchData matchData = new MatchData();
+    public static String token = "";
+    public static String matchId = "";
 }

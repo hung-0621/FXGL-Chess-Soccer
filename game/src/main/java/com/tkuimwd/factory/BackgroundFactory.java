@@ -31,7 +31,7 @@ public class BackgroundFactory implements EntityFactory {
         return FXGL.entityBuilder(data)
                 .type(EntityType.BACKGROUND)
                 .view(background)
-                .with(physics, new IrremovableComponent())
+                .with(physics, new IrremovableComponent()) // physics removed
                 .zIndex(-100)
                 .build();
     }

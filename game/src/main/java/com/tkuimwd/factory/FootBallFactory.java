@@ -25,18 +25,22 @@ public class FootBallFactory implements EntityFactory {
     public Entity spawnSuccer(SpawnData data) {
 
         FootBallModel model = data.get("footBallModel");
-        FootBallComponent component = new FootBallComponent();
+        String id = model.getId();
+        FootBallComponent component = new FootBallComponent(id);
         double radius = model.getRadius();
         Circle footBall = setView();
         PhysicsComponent physics = setPhysics();
 
-        return FXGL.entityBuilder(data)
+        Entity football = FXGL.entityBuilder(data)
                 .type(EntityType.FOOTBALL)
                 .view(footBall)
                 .bbox(new HitBox(new Point2D(-radius, -radius), BoundingShape.circle(radius)))
                 .with(physics, component, new IrremovableComponent())
                 .collidable()
                 .build();
+        // football.getProperties().setValue("id", id);
+
+        return football;
     }
 
     public Circle setView() {
@@ -49,8 +53,8 @@ public class FootBallFactory implements EntityFactory {
     public PhysicsComponent setPhysics() {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setFixtureDef(new FixtureDef()
-                .restitution(0.5f)
-                .friction(0.2f)
+                .restitution(0.9f)
+                .friction(0.1f)
                 .density(0.5f));
         BodyDef bd = new BodyDef();
         bd.setType(BodyType.DYNAMIC);

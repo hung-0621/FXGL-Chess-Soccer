@@ -1,12 +1,10 @@
 package com.tkuimwd.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
-import com.tkuimwd.model.ScoreBoardModel;
-import com.tkuimwd.type.Role;
+import com.tkuimwd.api.dto.MatchData;
 
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
 
@@ -14,32 +12,41 @@ public class ScoreBoard {
 
     private final double WIDTH;
     private final double HEIGHT;
+    private final MatchData matchData;
+    private final String player1_name;
+    private final String player2_name;
+    private int player1_score;
+    private int player2_score;
 
     public ScoreBoard(double width, double height) {
         this.WIDTH = width;
         this.HEIGHT = height;
+        this.matchData = FXGL.getWorldProperties().getObject("matchData");
+        this.player1_name = FXGL.getWorldProperties().getString("p1_name");
+        this.player2_name = FXGL.getWorldProperties().getString("p2_name");
+        this.player1_score = FXGL.getWorldProperties().getInt("p1_score");
+        this.player2_score = FXGL.getWorldProperties().getInt("p2_score");
     }
 
     public void CreateScoreBoard() {
+        FXGL.getWorldProperties().setValue("p1_socre", matchData.getScore1());
+        FXGL.getWorldProperties().setValue("p2_socre", matchData.getScore2());
         // score board
-        ScoreBoardModel scoreBoard = new ScoreBoardModel();
-        Text p1_name = new Text("Player 1");
-        Text p2_name = new Text("Player 2");
-        Text p1_score = new Text("" + scoreBoard.getScore(Role.PLAYER1));
-        Text p2_score = new Text("" + scoreBoard.getScore(Role.PLAYER2));
-        Text vs = new Text(" - ");
+        Text p1_name = FXGL.getUIFactoryService().newText(player1_name, Color.BLUE, 30);
+        Text p2_name = FXGL.getUIFactoryService().newText(player2_name, Color.RED, 30);
+        Text p1_score = FXGL.getUIFactoryService().newText("" + player1_score, Color.WHITE, 40);
+        Text p2_score = FXGL.getUIFactoryService().newText("" + player2_score, Color.WHITE, 40);
+        Text vs = FXGL.getUIFactoryService().newText(" VS ", Color.WHITE, 30);
 
-        p1_name.setFill(Color.BLUE);
-        p2_name.setFill(Color.RED);
-        p1_score.setFill(Color.WHITE);
-        p2_score.setFill(Color.WHITE);
+        p1_score.textProperty().bind(
+            FXGL.getWorldProperties().intProperty("p1_score").asString()
+        );
+
+        p2_score.textProperty().bind(
+            FXGL.getWorldProperties().intProperty("p2_score").asString()
+        );
+
         vs.setFill(Color.WHITE);
-
-        p1_name.setFont(Font.font("Bold", 30));
-        p2_name.setFont(Font.font("Bold", 30));
-        p1_score.setFont(Font.font("Bold", 50));
-        p2_score.setFont(Font.font("Bold", 50));
-        vs.setFont(Font.font("Bold", 30));
 
         // main
         HBox pane = new HBox();
@@ -52,7 +59,4 @@ public class ScoreBoard {
         FXGL.addUINode(pane, 0, 0);
     }
 
-    public void UpdateScoreBoard() {
-
-    }
 }

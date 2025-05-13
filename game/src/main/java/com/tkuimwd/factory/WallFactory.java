@@ -16,6 +16,7 @@ import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import com.tkuimwd.model.WallModel;
 import com.tkuimwd.type.EntityType;
 
+
 import javafx.geometry.Point2D;
 
 public class WallFactory implements EntityFactory {
@@ -41,9 +42,9 @@ public class WallFactory implements EntityFactory {
         physics.setBodyDef(bd);
 
         FixtureDef fd = new FixtureDef()
-                .restitution(0.8f)
-                .friction(0.1f)
-                .density(0f);
+                .restitution(1.0f)  // Increase bounce
+                .friction(0.1f)     // Remove friction
+                .density(1.0f);
         physics.setFixtureDef(fd);
         return physics;
     }
