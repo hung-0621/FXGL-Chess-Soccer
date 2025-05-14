@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.tkuimwd.api.dto.State;
+import com.tkuimwd.api.dto.StateUpdate;
 import com.tkuimwd.event.ChessReleaseEvent;
 import com.tkuimwd.type.EntityType;
 
@@ -138,10 +138,9 @@ public class NetworkComponent extends Component {
         // 每幀或固定間隔，collect 全部實體狀態並 broadcast
         frameCount++;
         if (frameCount >= FRAMES_PER_UPDATE) {
-            State update = collectState(tick);
+            StateUpdate update = collectState(tick);
             if (!update.getStates().isEmpty()) {
                 tick++;
-                System.out.println(update.toString());
                 sendStateUpdate(update);
             }
             frameCount = 0;
@@ -149,7 +148,7 @@ public class NetworkComponent extends Component {
     }
 
     /** 把當前所有實體的位置打包 */
-    private State collectState(int seq) {
+    private StateUpdate collectState(int tick) {
         List<EntityState> list = new ArrayList<>();
         list.clear();
         idMap.forEach((id, e) -> {
@@ -165,17 +164,17 @@ public class NetworkComponent extends Component {
                 }
             }
         });
-        State update = new State(tick, "state_update", matchData.getId(), list);
+        StateUpdate update = new StateUpdate(tick, matchData.getId(), list);
         return update;
     }
 
-    private void sendStateUpdate(State update) {
+    private void sendStateUpdate(StateUpdate update) {
         if (ws != null && ws.isOutputClosed() == false) {
             ObjectNode msg = mapper.createObjectNode();
             msg.put("type", update.getType());
             msg.put("matchId", update.getMatchId());
             msg.put("tick", update.getTick());
-            msg.set("payload", mapper.valueToTree(update));
+            msg.set("payload", mapper.valueToTree(update.getStates()));
             ws.sendText(msg.toString(), true);
         }
     }
@@ -187,10 +186,12 @@ public class NetworkComponent extends Component {
             try {
                 JsonNode root = mapper.readTree(data.toString());
                 if ("state_update".equals(root.get("type").asText())) {
-                    EntityState payload = mapper.treeToValue(
-                            root.get("payload"), EntityState.class);
+                    EntityState[] payload = mapper.treeToValue(
+                            root.get("payload"), EntityState[].class);
                     // 收到別人的狀態 → 更新本地
-                    FXGL.getGameTimer().runOnceAfter(() -> applyRemote(payload), Duration.ZERO);
+                    for (EntityState e : payload) {
+                        FXGL.getGameTimer().runOnceAfter(() -> applyRemote(e), Duration.ZERO);
+                    }
                 }
                 // else if ("turn_update".equals(root.get("type").asText())) {
                 // boolean turn = root.get("yourTurn").asBoolean();
@@ -222,10 +223,18 @@ public class NetworkComponent extends Component {
     }
 
     private void applyRemote(EntityState payload) {
+        String id = payload.getId();
         double x = payload.getX();
         double y = payload.getY();
-        Entity e = idMap.get(payload.getId());
+        if(id == null){
+            System.err.println("[Network] id is null");
+            return;
+        }
+        Entity e = idMap.get(id);
+        System.out.println("[Network] Before applyRemote: " + id + " " + x + " " + y);
         e.setPosition(x, y);
+        System.out.println("[Network] After applyRemote: " + id + " " + x + " " + y);
+        
     }
 
     // 用來處理進球後重置初始位置

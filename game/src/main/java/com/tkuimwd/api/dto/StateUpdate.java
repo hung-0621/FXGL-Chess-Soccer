@@ -1,4 +1,4 @@
-package com.exp.server.service.simulation.dto;
+package com.tkuimwd.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,7 +12,7 @@ public class StateUpdate {
     private final String type = "state_update";
 
     @JsonProperty("tick")
-    private int seq;
+    private int tick;
 
     @JsonProperty("matchId")
     private String matchId;
@@ -20,12 +20,13 @@ public class StateUpdate {
     @JsonProperty("payload")
     private List<EntityState> states;
 
-    public StateUpdate(){
+    public StateUpdate() {
 
     }
 
-    public StateUpdate(int seq, List<EntityState> states) {
-        this.seq = seq;
+    public StateUpdate(int tick, String matchId, List<EntityState> states) {
+        this.tick = tick;
+        this.matchId = matchId;
         this.states = states;
     }
 
@@ -33,8 +34,8 @@ public class StateUpdate {
         return type;
     }
 
-    public int getSeq() {
-        return seq;
+    public int getTick() {
+        return tick;
     }
 
     public String getMatchId() {

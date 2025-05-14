@@ -31,47 +31,47 @@ public class SimulationSession {
         this.moveCommands = new ConcurrentLinkedQueue<>();
     }
 
-    public void init(List<EntityState> dtos) {
-        for (EntityState d : dtos) {
-            Body b;
-            float x = UnitConverter.pxToMeter((float) d.getX()); // meters
-            float y = UnitConverter.pxToMeter((float) d.getY()); // meters
-            switch (d.getType()) {
-                case BACKGROUND:
-                    BackgroundFactory backgroundFactory = new BackgroundFactory(worldWapper.getWorld());
-                    b = backgroundFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                case WALL:
-                    WallFactory wallFactory = new WallFactory(worldWapper.getWorld());
-                    b = wallFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                case FOOTBALL:
-                    FootBallFactory footBallFactory = new FootBallFactory(worldWapper.getWorld());
-                    b = footBallFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                case GOAL:
-                    GoalFactory goalFactory = new GoalFactory(worldWapper.getWorld());
-                    b = goalFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                case P1_CHESS:
-                    ChessFactory p1ChessFactory = new ChessFactory(worldWapper.getWorld());
-                    b = p1ChessFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                case P2_CHESS:
-                    ChessFactory p2ChessFactory = new ChessFactory(worldWapper.getWorld());
-                    b = p2ChessFactory.createBody(x, y);
-                    bodies.put(d.getId(), b);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+    // public void init(List<EntityState> dtos) {
+    //     for (EntityState d : dtos) {
+    //         Body b;
+    //         float x = UnitConverter.pxToMeter((float) d.getX()); // meters
+    //         float y = UnitConverter.pxToMeter((float) d.getY()); // meters
+    //         switch (d.getType()) {
+    //             case BACKGROUND:
+    //                 BackgroundFactory backgroundFactory = new BackgroundFactory(worldWapper.getWorld());
+    //                 b = backgroundFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             case WALL:
+    //                 WallFactory wallFactory = new WallFactory(worldWapper.getWorld());
+    //                 b = wallFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             case FOOTBALL:
+    //                 FootBallFactory footBallFactory = new FootBallFactory(worldWapper.getWorld());
+    //                 b = footBallFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             case GOAL:
+    //                 GoalFactory goalFactory = new GoalFactory(worldWapper.getWorld());
+    //                 b = goalFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             case P1_CHESS:
+    //                 ChessFactory p1ChessFactory = new ChessFactory(worldWapper.getWorld());
+    //                 b = p1ChessFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             case P2_CHESS:
+    //                 ChessFactory p2ChessFactory = new ChessFactory(worldWapper.getWorld());
+    //                 b = p2ChessFactory.createBody(x, y);
+    //                 bodies.put(d.getId(), b);
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+    //     }
+    // }
 
     public void enqueue(MoveCommand command) {
         moveCommands.add(command);
@@ -99,8 +99,8 @@ public class SimulationSession {
                 allStopped = false;
             }
     
-            EntityState s = new EntityState(id, screenX, screenY, velX, velY);
-            list.add(s);
+            // EntityState s = new EntityState(id, screenX, screenY, velX, velY);
+            // list.add(s);
         }
     
         if (allStopped) {

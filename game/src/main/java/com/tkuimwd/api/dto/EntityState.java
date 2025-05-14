@@ -22,6 +22,8 @@ public class EntityState {
     //     this.vy = vy;
     // }
 
+    public EntityState(){}
+
     // websocket
     public EntityState(String id, double x, double y) {
         this.id = id;

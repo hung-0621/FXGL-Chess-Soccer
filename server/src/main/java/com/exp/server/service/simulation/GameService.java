@@ -23,85 +23,85 @@ public class GameService {
     }
 
     //! Restful api /api/game/init 從這裡抓
-    public List<EntityState> initEntityStates() {
-        entityStatesList.clear();
-        entityStatesList.add(getBackGroundEntityState("background"));
-        entityStatesList.add(getWallEntityState("wall"));
-        entityStatesList.add(getFootBallEntityState("football"));
-        entityStatesList.add(getGoalEntityState("p1_goal"));
-        entityStatesList.add(getGoalEntityState("p2_goal"));
-        for (int i = 0; i < EntityConfig.P1_CHESS_POSITION.length; i++) {
-            entityStatesList.add(getP1ChessEntityState("p1_chess_" + i));
-        }
-        for (int i = 0; i < EntityConfig.P2_CHESS_POSITION.length; i++) {
-            entityStatesList.add(getP2ChessEntityState("p2_chess_" + i));
-        }
-        return entityStatesList;
-    }
+    // public List<EntityState> initEntityStates() {
+    //     entityStatesList.clear();
+    //     entityStatesList.add(getBackGroundEntityState("background"));
+    //     entityStatesList.add(getWallEntityState("wall"));
+    //     entityStatesList.add(getFootBallEntityState("football"));
+    //     entityStatesList.add(getGoalEntityState("p1_goal"));
+    //     entityStatesList.add(getGoalEntityState("p2_goal"));
+    //     for (int i = 0; i < EntityConfig.P1_CHESS_POSITION.length; i++) {
+    //         entityStatesList.add(getP1ChessEntityState("p1_chess_" + i));
+    //     }
+    //     for (int i = 0; i < EntityConfig.P2_CHESS_POSITION.length; i++) {
+    //         entityStatesList.add(getP2ChessEntityState("p2_chess_" + i));
+    //     }
+    //     return entityStatesList;
+    // }
 
-    private EntityState getBackGroundEntityState(String id) {
-        return new EntityState(
-                id,
-                EntityType.BACKGROUND,
-                EntityConfig.BACKGROUND_POSITION[0],
-                EntityConfig.BACKGROUND_POSITION[1],
-                0,
-                0);
-    }
+    // private EntityState getBackGroundEntityState(String id) {
+    //     return new EntityState(
+    //             id,
+    //             EntityType.BACKGROUND,
+    //             EntityConfig.BACKGROUND_POSITION[0],
+    //             EntityConfig.BACKGROUND_POSITION[1],
+    //             0,
+    //             0);
+    // }
 
-    private EntityState getWallEntityState(String id) {
-        return new EntityState(
-                id,
-                EntityType.WALL,
-                EntityConfig.WALL_POSITION[0],
-                EntityConfig.WALL_POSITION[1],
-                0,
-                0);
-    }
+    // private EntityState getWallEntityState(String id) {
+    //     return new EntityState(
+    //             id,
+    //             EntityType.WALL,
+    //             EntityConfig.WALL_POSITION[0],
+    //             EntityConfig.WALL_POSITION[1],
+    //             0,
+    //             0);
+    // }
 
-    private EntityState getFootBallEntityState(String id) {
-        return new EntityState(
-                id,
-                EntityType.FOOTBALL,
-                EntityConfig.FOOTBALL_POSITION[0],
-                EntityConfig.FOOTBALL_POSITION[1],
-                0,
-                0);
-    }
+    // private EntityState getFootBallEntityState(String id) {
+    //     return new EntityState(
+    //             id,
+    //             EntityType.FOOTBALL,
+    //             EntityConfig.FOOTBALL_POSITION[0],
+    //             EntityConfig.FOOTBALL_POSITION[1],
+    //             0,
+    //             0);
+    // }
 
-    //修改了一下 原本的寫法會造成 id.split("_") → ["p1", "goal"] 所以 ["p1", "goal"][2] → 爆炸 
-    private EntityState getGoalEntityState(String id) {
-        int index = id.contains("p1") ? 0 : 1;
-        return new EntityState(
-                id,
-                EntityType.GOAL,
-                EntityConfig.GOAL_POSITION[index][0],
-                EntityConfig.GOAL_POSITION[index][1],
-                0,
-                0);
-    }
+    // //修改了一下 原本的寫法會造成 id.split("_") → ["p1", "goal"] 所以 ["p1", "goal"][2] → 爆炸 
+    // private EntityState getGoalEntityState(String id) {
+    //     int index = id.contains("p1") ? 0 : 1;
+    //     return new EntityState(
+    //             id,
+    //             EntityType.GOAL,
+    //             EntityConfig.GOAL_POSITION[index][0],
+    //             EntityConfig.GOAL_POSITION[index][1],
+    //             0,
+    //             0);
+    // }
 
-    private EntityState getP1ChessEntityState(String id) {
-        int index = Integer.parseInt(id.split("_")[2]);
-        return new EntityState(
-                id,
-                EntityType.P1_CHESS,
-                EntityConfig.P1_CHESS_POSITION[index][0],
-                EntityConfig.P1_CHESS_POSITION[index][1],
-                0,
-                0);
+    // private EntityState getP1ChessEntityState(String id) {
+    //     int index = Integer.parseInt(id.split("_")[2]);
+    //     return new EntityState(
+    //             id,
+    //             EntityType.P1_CHESS,
+    //             EntityConfig.P1_CHESS_POSITION[index][0],
+    //             EntityConfig.P1_CHESS_POSITION[index][1],
+    //             0,
+    //             0);
 
-    }
+    // }
 
-    private EntityState getP2ChessEntityState(String id) {
-        int index = Integer.parseInt(id.split("_")[2]);
-        return new EntityState(
-                id,
-                EntityType.P2_CHESS,
-                EntityConfig.P2_CHESS_POSITION[index][0],
-                EntityConfig.P2_CHESS_POSITION[index][1],
-                0,
-                0);
-    }
+    // private EntityState getP2ChessEntityState(String id) {
+    //     int index = Integer.parseInt(id.split("_")[2]);
+    //     return new EntityState(
+    //             id,
+    //             EntityType.P2_CHESS,
+    //             EntityConfig.P2_CHESS_POSITION[index][0],
+    //             EntityConfig.P2_CHESS_POSITION[index][1],
+    //             0,
+    //             0);
+    // }
 
 }
