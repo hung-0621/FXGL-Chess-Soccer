@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +177,10 @@ public class NetworkComponent extends Component {
             msg.put("tick", update.getTick());
             msg.set("payload", mapper.valueToTree(update.getStates()));
             ws.sendText(msg.toString(), true);
+
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                // System.out.println("sendStateUpdate: " + msg.toString());
+            }, Duration.seconds(0.01));
         }
     }
 
@@ -183,15 +188,20 @@ public class NetworkComponent extends Component {
         @Override
         public CompletionStage<?> onText(WebSocket webSocket,
                 CharSequence data, boolean last) {
+
             try {
                 JsonNode root = mapper.readTree(data.toString());
+                System.out.println("收到 WS 訊息: " + root.toString());
                 if ("state_update".equals(root.get("type").asText())) {
-                    EntityState[] payload = mapper.treeToValue(
-                            root.get("payload"), EntityState[].class);
-                    // 收到別人的狀態 → 更新本地
-                    for (EntityState e : payload) {
-                        FXGL.getGameTimer().runOnceAfter(() -> applyRemote(e), Duration.ZERO);
-                    }
+                        List<EntityState> payload = Arrays.asList(
+                                mapper.treeToValue(root.get("payload"), EntityState[].class));
+
+                        FXGL.getGameTimer().runOnceAfter(() -> {
+                            for (EntityState s : payload) {
+                                applyRemote(s);
+                            }
+                        }, Duration.ZERO);
+    
                 }
                 // else if ("turn_update".equals(root.get("type").asText())) {
                 // boolean turn = root.get("yourTurn").asBoolean();
@@ -223,19 +233,19 @@ public class NetworkComponent extends Component {
     }
 
     private void applyRemote(EntityState payload) {
-        String id = payload.getId();
-        double x = payload.getX();
-        double y = payload.getY();
-        if(id == null){
-            System.err.println("[Network] id is null");
+    FXGL.getGameTimer().runOnceAfter(() -> {
+        Entity e = idMap.get(payload.getId());
+        if (e == null) {
+            System.err.println("找不到實體: " + payload.getId());
             return;
         }
-        Entity e = idMap.get(id);
-        System.out.println("[Network] Before applyRemote: " + id + " " + x + " " + y);
-        e.setPosition(x, y);
-        System.out.println("[Network] After applyRemote: " + id + " " + x + " " + y);
-        
-    }
+
+        PhysicsComponent physics = e.getComponent(PhysicsComponent.class);
+        physics.overwritePosition(new Point2D(payload.getX(), payload.getY()));
+        physics.setLinearVelocity(Point2D.ZERO);
+    }, Duration.ZERO);
+}
+
 
     // 用來處理進球後重置初始位置
     // private void applyReset() {

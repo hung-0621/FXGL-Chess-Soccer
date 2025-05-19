@@ -24,20 +24,20 @@ public class GameService {
 
     //! Restful api /api/game/init 從這裡抓
     // public List<EntityState> initEntityStates() {
-    //     entityStatesList.clear();
-    //     entityStatesList.add(getBackGroundEntityState("background"));
-    //     entityStatesList.add(getWallEntityState("wall"));
-    //     entityStatesList.add(getFootBallEntityState("football"));
-    //     entityStatesList.add(getGoalEntityState("p1_goal"));
-    //     entityStatesList.add(getGoalEntityState("p2_goal"));
-    //     for (int i = 0; i < EntityConfig.P1_CHESS_POSITION.length; i++) {
-    //         entityStatesList.add(getP1ChessEntityState("p1_chess_" + i));
-    //     }
-    //     for (int i = 0; i < EntityConfig.P2_CHESS_POSITION.length; i++) {
-    //         entityStatesList.add(getP2ChessEntityState("p2_chess_" + i));
-    //     }
-    //     return entityStatesList;
-    // }
+        // entityStatesList.clear();
+        // entityStatesList.add(getBackGroundEntityState("background"));
+        // entityStatesList.add(getWallEntityState("wall"));
+        // entityStatesList.add(getFootBallEntityState("football"));
+        // entityStatesList.add(getGoalEntityState("p1_goal"));
+        // entityStatesList.add(getGoalEntityState("p2_goal"));
+        // for (int i = 0; i < EntityConfig.P1_CHESS_POSITION.length; i++) {
+        //     entityStatesList.add(getP1ChessEntityState("p1_chess_" + i));
+        // }
+        // for (int i = 0; i < EntityConfig.P2_CHESS_POSITION.length; i++) {
+        //     entityStatesList.add(getP2ChessEntityState("p2_chess_" + i));
+        // }
+        // return entityStatesList;
+    }
 
     // private EntityState getBackGroundEntityState(String id) {
     //     return new EntityState(
@@ -104,4 +104,4 @@ public class GameService {
     //             0);
     // }
 
-}
+

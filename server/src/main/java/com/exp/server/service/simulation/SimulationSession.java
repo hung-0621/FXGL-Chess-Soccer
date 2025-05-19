@@ -31,7 +31,7 @@ public class SimulationSession {
         this.moveCommands = new ConcurrentLinkedQueue<>();
     }
 
-    // public void init(List<EntityState> dtos) {
+    public void init(List<EntityState> dtos) {
     //     for (EntityState d : dtos) {
     //         Body b;
     //         float x = UnitConverter.pxToMeter((float) d.getX()); // meters
@@ -71,7 +71,7 @@ public class SimulationSession {
     //                 break;
     //         }
     //     }
-    // }
+    }
 
     public void enqueue(MoveCommand command) {
         moveCommands.add(command);

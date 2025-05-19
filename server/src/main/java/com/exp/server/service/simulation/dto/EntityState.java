@@ -23,23 +23,17 @@ public class EntityState {
     // @JsonProperty("vy")
     // private double vy;
 
-    // public EntityState(String id, EntityType type, double x, double y, double vx, double vy) {
-    //     this.id = id;
-    //     this.type = type;
-    //     this.x = x;
-    //     this.y = y;
-    //     this.vx = vx;
-    //     this.vy = vy;
-    // }
-
     public EntityState() {
     }
 
-    // websocket 專用
+
+    // websocket 專用無 type 建構式
     public EntityState(String id, double x, double y) {
         this.id = id;
         this.x = x;
         this.y = y;
+        // this.vx = vx;
+        // this.vy = vy;
     }
 
     public String getId() {
