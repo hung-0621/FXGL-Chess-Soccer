@@ -8,13 +8,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import com.almasb.fxgl.core.collection.PropertyMap;
+import com.almasb.fxgl.core.math.Vec2;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.physics.box2d.dynamics.Body;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -136,16 +139,21 @@ public class NetworkComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        // 每幀或固定間隔，collect 全部實體狀態並 broadcast
-        frameCount++;
-        if (frameCount >= FRAMES_PER_UPDATE) {
-            StateUpdate update = collectState(tick);
-            if (!update.getStates().isEmpty()) {
-                tick++;
-                sendStateUpdate(update);
-            }
-            frameCount = 0;
+        StateUpdate update = collectState(tick);
+        if (!update.getStates().isEmpty()) {
+            tick++;
+            sendStateUpdate(update);
         }
+        // 每幀或固定間隔，collect 全部實體狀態並 broadcast
+        // frameCount++;
+        // if (frameCount >= FRAMES_PER_UPDATE) {
+        // StateUpdate update = collectState(tick);
+        // if (!update.getStates().isEmpty()) {
+        // tick++;
+        // sendStateUpdate(update);
+        // }
+        // frameCount = 0;
+        // }
     }
 
     /** 把當前所有實體的位置打包 */
@@ -160,9 +168,10 @@ public class NetworkComponent extends Component {
                 double y = e.getY();
                 double vx = phy.getLinearVelocity().getX();
                 double vy = phy.getLinearVelocity().getY();
-                if (vx != 0 || vy != 0) {
-                    list.add(new EntityState(id, x, y));
+                if (vx == 0 && vy == 0) {
+                    return;
                 }
+                list.add(new EntityState(id, x, y, vx, vy));
             }
         });
         StateUpdate update = new StateUpdate(tick, matchData.getId(), list);
@@ -179,73 +188,73 @@ public class NetworkComponent extends Component {
             ws.sendText(msg.toString(), true);
 
             FXGL.getGameTimer().runOnceAfter(() -> {
-                // System.out.println("sendStateUpdate: " + msg.toString());
-            }, Duration.seconds(0.01));
+                System.out.println("sendStateUpdate: " + msg.toString());
+            }, Duration.ZERO);
         }
     }
 
     private class WSListener implements WebSocket.Listener {
+        private StringBuilder buf = new StringBuilder();
+
         @Override
         public CompletionStage<?> onText(WebSocket webSocket,
-                CharSequence data, boolean last) {
+                CharSequence data,
+                boolean last) {
+            // 1) 將每次來的片段累積
+            buf.append(data);
+
+            if (!last) {
+                // 2) 還沒到結尾，先要求下一個 frame
+                webSocket.request(1);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            // 3) last==true，這時候 buf.toString() 才是完整 JSON
+            String full = buf.toString();
+            buf.setLength(0); // 清空，為下一條訊息做準備
 
             try {
-                JsonNode root = mapper.readTree(data.toString());
-                System.out.println("收到 WS 訊息: " + root.toString());
+                JsonNode root = mapper.readTree(full);
                 if ("state_update".equals(root.get("type").asText())) {
-                        List<EntityState> payload = Arrays.asList(
-                                mapper.treeToValue(root.get("payload"), EntityState[].class));
-
-                        FXGL.getGameTimer().runOnceAfter(() -> {
-                            for (EntityState s : payload) {
-                                applyRemote(s);
-                            }
-                        }, Duration.ZERO);
-    
+                    List<EntityState> payload = Arrays.asList(
+                            mapper.treeToValue(root.get("payload"),
+                                    EntityState[].class));
+                    FXGL.getGameTimer().runOnceAfter(() -> {
+                        for (EntityState s : payload) {
+                            applyRemote(s);
+                        }
+                    }, Duration.ZERO);
                 }
-                // else if ("turn_update".equals(root.get("type").asText())) {
-                // boolean turn = root.get("yourTurn").asBoolean();
-                // matchData.setWaitingForTurnSwitch(!turn);
-                // matchData.setCurrentPlayerId(playerToken);
-
-                // } else if ("score_update".equals(root.get("type").asText())) {
-                // int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
-                // int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
-                // matchData.setScore1(score1);
-                // matchData.setScore2(score2);
-                // applyReset();
-                // } else if ("restore".equals(root.get("type").asText())) {
-                // // int score1 = mapper.treeToValue(root.get("scroe1"), Integer.class);
-                // // int score2 = mapper.treeToValue(root.get("scroe2"), Integer.class);
-                // // global_var.setValue("score1", score1);
-                // // global_var.setValue("score2", score2);
-                // // global_var.setValue("yourTurn", root.get("yourTurn").asBoolean());
-                // } else if ("game_over".equals(root.get("type").asText())) { // ! fix send
-                // token
-                // String winner = root.get("winner").asText();
-                // matchData.setWinnerId(winner);
-                // }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return WebSocket.Listener.super.onText(webSocket, data, last);
+
+            // 4) 處理完畢，準備接收下一條 WebSocket 訊息
+            webSocket.request(1);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public void onOpen(WebSocket webSocket) {
+            // 一開始就先 request 一個 frame
+            webSocket.request(1);
+            WebSocket.Listener.super.onOpen(webSocket);
         }
     }
 
     private void applyRemote(EntityState payload) {
-    FXGL.getGameTimer().runOnceAfter(() -> {
-        Entity e = idMap.get(payload.getId());
-        if (e == null) {
-            System.err.println("找不到實體: " + payload.getId());
-            return;
-        }
-
-        PhysicsComponent physics = e.getComponent(PhysicsComponent.class);
-        physics.overwritePosition(new Point2D(payload.getX(), payload.getY()));
-        physics.setLinearVelocity(Point2D.ZERO);
-    }, Duration.ZERO);
-}
-
+        FXGL.getGameTimer().runOnceAfter(() -> {
+            Entity e = idMap.get(payload.getId());
+            if (e == null) {
+                System.err.println("找不到實體: " + payload.getId());
+                return;
+            }
+            // e.setPosition(payload.getX(), payload.getY());
+            PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
+            phy.overwritePosition(new Point2D(payload.getX(), payload.getY()));
+            // System.out.println("applyRemote: " + payload.getId() + " " + payload.getX() + " " + payload.getY());
+        }, Duration.ZERO);
+    }
 
     // 用來處理進球後重置初始位置
     // private void applyReset() {
