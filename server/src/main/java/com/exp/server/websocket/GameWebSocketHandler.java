@@ -177,11 +177,50 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             System.out.println("[Forwarded] state_update from " + senderToken + " to opponent " + opponentToken);
         }
 
+        //{ type: "turn_done", matchId: "xxx" }
+
+        if ("turn_done".equals(type)) {
+        String matchId = msg.get("matchId").asText();
+        String senderToken = sessionIdToTokenMap.get(session.getId());
+        if (senderToken == null) return;
+
+        MatchModel match = matchRepository.findById(matchId).orElse(null);
+        if (match == null) return;
+
+        // 1. 檢查是否是當前玩家
+        if (!senderToken.equals(match.getCurrentPlayerId())) {
+            sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
+            return;
+        }
+
+        // 2. 切換回合
+        String nextPlayerId = senderToken.equals(match.getPlayer1Id())
+            ? match.getPlayer2Id()
+            : match.getPlayer1Id();
+
+        match.setCurrentPlayerId(nextPlayerId);
+        matchRepository.save(match);
+
+        // 3. 廣播 turn_update 給雙方  // {"type": "turn_update","yourTurn": true}
+        String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+            match.getPlayer1Id().equals(nextPlayerId));
+        String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+            match.getPlayer2Id().equals(nextPlayerId));
+
+        sendToToken(match.getPlayer1Id(), msgToP1);
+        sendToToken(match.getPlayer2Id(), msgToP2);
+
+        System.out.println("回合已切換到: " + nextPlayerId);
+    }
+
+
 
         } catch (Exception e) {
             System.out.println("處理訊息失敗：" + e.getMessage());
             return;
         }
+
+        
     }
 
     // if ("shot".equals(type)) {
