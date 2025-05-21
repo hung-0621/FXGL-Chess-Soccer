@@ -18,6 +18,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.Body;
+import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -25,15 +26,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.api.dto.StateUpdate;
 import com.tkuimwd.event.ChessReleaseEvent;
 import com.tkuimwd.type.EntityType;
+import com.tkuimwd.ui.ScoreBoard;
 
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.util.Duration;
 
+import com.tkuimwd.api.API;
 import com.tkuimwd.api.dto.EntityState;
 import com.tkuimwd.api.dto.MatchData;
 import com.tkuimwd.api.dto.MoveCommand;
 import com.tkuimwd.api.dto.ShotCommand;
 import com.tkuimwd.Config;
+import com.tkuimwd.Main;
 
 public class NetworkComponent extends Component {
 
@@ -43,16 +49,15 @@ public class NetworkComponent extends Component {
     private int tick = 0;
     private boolean isMyTurn;
 
-
-    private final MatchData matchData = Config.matchData;
+    private MatchData matchData = Config.matchData;
     private final String playerToken = Config.token;
+    private final boolean isHost = Config.isHost;
 
     @Override
     public void onAdded() {
-        idMap.clear();
-        isMyTurn = matchData.getCurrentPlayerId().equals(playerToken);
 
         // 1) 先 collect idMap
+        idMap.clear();
         List<Entity> p1List = FXGL.getGameWorld()
                 .getEntitiesByType(EntityType.P1_CHESS);
         for (int i = 0; i < p1List.size(); i++) {
@@ -79,6 +84,13 @@ public class NetworkComponent extends Component {
         String id = footBallComponent.getId();
         if (id != null) {
             idMap.put(id, football);
+        }
+
+        isMyTurn = matchData.getCurrentPlayerId().equals(playerToken);
+        if (isMyTurn) {
+            unlockChess();
+        } else {
+            lockChess();
         }
 
         if (playerToken == null || playerToken.isEmpty()) {
@@ -224,6 +236,24 @@ public class NetworkComponent extends Component {
                 } else if ("turn_update".equals(root.get("type").asText())) {
                     // 處理回合結束的邏輯
                     isMyTurn = root.get("yourTurn").asBoolean();
+                    Config.isMyTurn = isMyTurn;
+                    API.getMatchInfo(Config.matchId)
+                            .thenAccept(matchInfo -> {
+                                if (matchInfo != null && matchInfo.getMatchStatus().equals("playing")) {
+                                    matchData = matchInfo;
+                                }
+                            })
+                            .exceptionally(ex -> {
+                                ex.printStackTrace();
+                                return null;
+                            });
+                    Main.getScoreBoard().updateScoreBoard();
+
+                    if (isMyTurn) {
+                        unlockChess();
+                    } else {
+                        lockChess();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -250,7 +280,7 @@ public class NetworkComponent extends Component {
                 System.err.println("找不到實體: " + payload.getId());
                 return;
             }
-            // e.setPosition(payload.getX(), payload.getY());
+
             PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
             phy.overwritePosition(new Point2D(payload.getX(), payload.getY()));
             // System.out.println("applyRemote: " + payload.getId() + " " + payload.getX() +
@@ -259,24 +289,52 @@ public class NetworkComponent extends Component {
     }
 
     // 用來處理進球後重置初始位置
-    // private void applyReset() {
-    // double[][] pi_chess_position = Config.player1_chess_position;
-    // double[][] p2_chess_position = Config.player2_chess_position;
-    // Point2D football_position = Config.FOOTBALL_POSITION;
+    private void applyReset() {
+        double[][] pi_chess_position = Config.player1_chess_position;
+        double[][] p2_chess_position = Config.player2_chess_position;
+        Point2D football_position = Config.FOOTBALL_POSITION;
 
-    // idMap.forEach((id, e) -> {
-    // if (id.startsWith("p1_chess")) {
-    // int index = Integer.parseInt(id.substring(9));
-    // e.setPosition(pi_chess_position[index][0], pi_chess_position[index][1]);
-    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    // } else if (id.startsWith("p2_chess")) {
-    // int index = Integer.parseInt(id.substring(9));
-    // e.setPosition(p2_chess_position[index][0], p2_chess_position[index][1]);
-    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    // } else if (id.equals("football")) {
-    // e.setPosition(football_position.getX(), football_position.getY());
-    // e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
-    // }
-    // });
-    // }
+        idMap.forEach((id, e) -> {
+            if (id.startsWith("p1_chess")) {
+                int index = Integer.parseInt(id.substring(9));
+                e.setPosition(pi_chess_position[index][0], pi_chess_position[index][1]);
+                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+            } else if (id.startsWith("p2_chess")) {
+                int index = Integer.parseInt(id.substring(9));
+                e.setPosition(p2_chess_position[index][0], p2_chess_position[index][1]);
+                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+            } else if (id.equals("football")) {
+                e.setPosition(football_position.getX(), football_position.getY());
+                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+            }
+        });
+    }
+
+    private void lockChess() {
+        idMap.forEach((id, e) -> {
+            if (!e.hasComponent(ChessComponent.class)
+                    || !e.hasComponent(AimComponent.class)) {
+                return;
+            }
+            e.getComponent(ChessComponent.class).setLock();
+            e.getComponent(AimComponent.class).setLock();
+        });
+    }
+
+    private void unlockChess() {
+        idMap.forEach((id, e) -> {
+            if (!e.hasComponent(ChessComponent.class)
+                    || !e.hasComponent(AimComponent.class))
+                return;
+
+            if (isHost && e.getType() == EntityType.P1_CHESS
+                    || !isHost && e.getType() == EntityType.P2_CHESS) {
+                e.getComponent(ChessComponent.class).setUnlock();
+                e.getComponent(AimComponent.class).setUnlock();
+            } else {
+                e.getComponent(ChessComponent.class).setLock();
+                e.getComponent(AimComponent.class).setLock();
+            }
+        });
+    }
 }

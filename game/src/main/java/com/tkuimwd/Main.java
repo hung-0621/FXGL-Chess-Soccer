@@ -34,15 +34,8 @@ public class Main extends GameApplication {
 
     private static final int HEIGHT = Config.HEIGHT;
     private static final int WIDTH = Config.WIDTH;
-
-    @Override
-    protected void initGameVars(Map<String, Object> vars) {
-        // vars.put("matchData", new MatchData());
-        // vars.put("p1_name", "Player 1");
-        // vars.put("p2_name", "Player 2");
-        // vars.put("p1_score", 0);
-        // vars.put("p2_score", 0);
-    }
+    private static Main instance;
+    private ScoreBoard scoreBoard;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -57,7 +50,8 @@ public class Main extends GameApplication {
 
     @Override
     protected void initUI() {
-        ScoreBoard scoreBoard = new ScoreBoard(WIDTH, 70);
+        instance = this;
+        this.scoreBoard = new ScoreBoard(WIDTH, 70);
         scoreBoard.CreateScoreBoard();
     }
 
@@ -122,13 +116,13 @@ public class Main extends GameApplication {
         FXGL.spawn("Goal", new SpawnData(P2_GOAL_POSITION).put("goalModel", p2_goal_model));
 
         initNetwork();
-        
+
     }
 
     private void initNetwork() {
         FXGL.entityBuilder()
-            .with(new NetworkComponent())
-            .buildAndAttach();
+                .with(new NetworkComponent())
+                .buildAndAttach();
     }
 
     @Override
@@ -139,6 +133,10 @@ public class Main extends GameApplication {
     @Override
     protected void initPhysics() {
         FXGL.getPhysicsWorld().setGravity(0, 0);
+    }
+
+    public static ScoreBoard getScoreBoard() {
+        return instance.scoreBoard;
     }
 
     public static void main(String[] args) {

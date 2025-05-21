@@ -2,6 +2,7 @@ package com.tkuimwd;
 
 import javafx.geometry.Point2D;
 import com.tkuimwd.api.dto.MatchData;
+import com.tkuimwd.ui.ScoreBoard;
 
 public class Config {
     public static final int HEIGHT = 748; // 遊戲場景高度 scene + board
@@ -52,8 +53,11 @@ public class Config {
 
     // 登入後設定的 token / matchId（提供給 NetworkComponent
     public static MatchData matchData = new MatchData();
+    public static boolean isHost;
+    public static boolean isMyTurn;
     public static String player1_name = "";
     public static String player2_name = "";
     public static String token = "";
     public static String matchId = "";
+
 }

@@ -45,6 +45,8 @@ public class CreateRoomScene extends SubScene {
         this.hostToken = hostToken;
         this.guestToken = guestToken;
 
+        Config.isHost = isHost;
+
         var background = createBackground();
         var mainBox = createMainBox();
         var title = createTitle();
@@ -158,8 +160,20 @@ public class CreateRoomScene extends SubScene {
                             System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
                             Config.matchData = matchData;
                             Config.matchId = matchData.getId();
+                            Config.isMyTurn = matchData.getCurrentPlayerId().equals(guestToken);
                             Config.token = matchData.getPlayer2Id();
-                            Platform.runLater(() -> isStarted = true);
+                            System.out.println("==== [Guest] ====");
+                            System.out.println("[CreateRoomScene] token=" + Config.token);
+                            System.out.println("[CreateRoomScene] isHost=" + Config.isHost);
+                            System.out.println("[CreateRoomScene] isMyTurn" + Config.isMyTurn);
+                            Platform.runLater(() -> {
+                                try {
+                                    Thread.sleep(50);
+                                    isStarted = true;
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            });
                         }
                     })
                     .exceptionally(ex -> {
@@ -294,9 +308,19 @@ public class CreateRoomScene extends SubScene {
                             System.out.println("matchId=" + matchData.getId());
                             Config.matchData = matchData;
                             Config.matchId = matchData.getId();
+                            Config.isMyTurn = matchData.getCurrentPlayerId().equals(hostToken);
                             Config.token = matchData.getPlayer1Id();
+                            System.out.println("==== [Host] ====");
+                            System.out.println("[CreateRoomScene] token=" + Config.token);
+                            System.out.println("[CreateRoomScene] isHost=" + Config.isHost);
+                            System.out.println("[CreateRoomScene] isMyTurn=" + Config.isMyTurn);
                             Platform.runLater(() -> {
-                                isStarted = true;
+                                try {
+                                    Thread.sleep(50);
+                                    isStarted = true;
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                             });
                         } else {
                             // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("無法啟動遊戲，後端回傳

@@ -47,6 +47,11 @@ public class ChessComponent extends Component {
         }
     }
 
+    @Override
+    public void onRemoved() {
+
+    }
+
     public void onPress() {
         chess.setStroke(Color.YELLOW);
         this.start = getEntity().getPosition();
@@ -92,6 +97,16 @@ public class ChessComponent extends Component {
 
     public String getId() {
         return id;
+    }
+
+    public void setLock(){
+        // chess.setDisable(true);
+        chess.setMouseTransparent(true);
+    }
+
+    public void setUnlock(){
+        // chess.setDisable(false);
+        chess.setMouseTransparent(false);
     }
 
 }

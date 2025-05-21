@@ -91,4 +91,12 @@ public class AimComponent extends Component {
     private double getDistance() {
         return Math.min(end.distance(start), maxDistance);
     }
+
+    public void setLock(){
+        chess.setDisable(true);
+    }
+
+    public void setUnlock(){
+        chess.setDisable(false);
+    }
 }
