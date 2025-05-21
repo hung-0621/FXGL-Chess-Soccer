@@ -39,23 +39,18 @@ public class NetworkComponent extends Component {
 
     private WebSocket ws;
     private ObjectMapper mapper = new ObjectMapper();
-    private Map<String, Entity> p1_chess_Map = new HashMap<>();
     private Map<String, Entity> idMap = new HashMap<>();
     private int tick = 0;
-    private int frameCount = 0;
-    private final int FRAMES_PER_UPDATE = 6; // 每6幀更新一次，約0.1秒(假設60FPS)
-    private final int UPDATE_INTERVAL_MS = 100; // 更新間隔時間(毫秒)
+    private boolean isMyTurn;
+
 
     private final MatchData matchData = Config.matchData;
     private final String playerToken = Config.token;
 
-    // private String matchId = "681f4eb322f7275fd1de93d4"; // 這是測試用的matchId
-    // private String playerToken = "3271341c-c863-4f2c-8d19-eb25ac33b7fd"; //
-    // 這是測試用的playerToken
-
     @Override
     public void onAdded() {
         idMap.clear();
+        isMyTurn = matchData.getCurrentPlayerId().equals(playerToken);
 
         // 1) 先 collect idMap
         List<Entity> p1List = FXGL.getGameWorld()
@@ -67,7 +62,7 @@ public class NetworkComponent extends Component {
             ChessComponent chessComponent = e.getComponent(ChessComponent.class);
             String id = chessComponent.getId();
             idMap.put(id, e);
-            p1_chess_Map.put(id, e);
+
         }
 
         List<Entity> p2List = FXGL.getGameWorld()
@@ -110,20 +105,20 @@ public class NetworkComponent extends Component {
                 });
     }
 
-    private void createListener() {
-        System.out.println("監聽事件: ChessReleaseEvent.CHESS_RELEASE");
-        FXGL.getEventBus().addEventHandler(
-                ChessReleaseEvent.CHESS_RELEASE,
-                e -> {
-                    // MoveCommand mc = new MoveCommand(
-                    // e.getId(),
-                    // e.getStartX(), e.getStartY(),
-                    // e.getEndX(), e.getEndY());
+    // private void createListener() {
+    // System.out.println("監聽事件: ChessReleaseEvent.CHESS_RELEASE");
+    // FXGL.getEventBus().addEventHandler(
+    // ChessReleaseEvent.CHESS_RELEASE,
+    // e -> {
+    // MoveCommand mc = new MoveCommand(
+    // e.getId(),
+    // e.getStartX(), e.getStartY(),
+    // e.getEndX(), e.getEndY());
 
-                    // ShotCommand sc = new ShotCommand(tick++, "send", matchData.getId(), mc);
-                    // sendCommand(sc);
-                });
-    }
+    // ShotCommand sc = new ShotCommand(tick++, "send", matchData.getId(), mc);
+    // sendCommand(sc);
+    // });
+    // }
 
     // private void sendCommand(ShotCommand shotcommand) {
     // if (ws != null && !ws.isOutputClosed()) {
@@ -143,17 +138,10 @@ public class NetworkComponent extends Component {
         if (!update.getStates().isEmpty()) {
             tick++;
             sendStateUpdate(update);
+        } else if (update.getStates().isEmpty() && tick > 0) {
+            tick = 0;
+            sendTurnDone();
         }
-        // 每幀或固定間隔，collect 全部實體狀態並 broadcast
-        // frameCount++;
-        // if (frameCount >= FRAMES_PER_UPDATE) {
-        // StateUpdate update = collectState(tick);
-        // if (!update.getStates().isEmpty()) {
-        // tick++;
-        // sendStateUpdate(update);
-        // }
-        // frameCount = 0;
-        // }
     }
 
     /** 把當前所有實體的位置打包 */
@@ -187,9 +175,18 @@ public class NetworkComponent extends Component {
             msg.set("payload", mapper.valueToTree(update.getStates()));
             ws.sendText(msg.toString(), true);
 
-            FXGL.getGameTimer().runOnceAfter(() -> {
-                System.out.println("sendStateUpdate: " + msg.toString());
-            }, Duration.ZERO);
+            System.out.println("sendStateUpdate: " + msg.toString());
+        }
+    }
+
+    private void sendTurnDone() {
+        if (ws != null && ws.isOutputClosed() == false) {
+            ObjectNode msg = mapper.createObjectNode();
+            msg.put("type", "turn_done");
+            msg.put("matchId", matchData.getId());
+            ws.sendText(msg.toString(), true);
+
+            System.out.println("=== TurnDone ===");
         }
     }
 
@@ -224,6 +221,9 @@ public class NetworkComponent extends Component {
                             applyRemote(s);
                         }
                     }, Duration.ZERO);
+                } else if ("turn_update".equals(root.get("type").asText())) {
+                    // 處理回合結束的邏輯
+                    isMyTurn = root.get("yourTurn").asBoolean();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -240,6 +240,7 @@ public class NetworkComponent extends Component {
             webSocket.request(1);
             WebSocket.Listener.super.onOpen(webSocket);
         }
+
     }
 
     private void applyRemote(EntityState payload) {
@@ -252,7 +253,8 @@ public class NetworkComponent extends Component {
             // e.setPosition(payload.getX(), payload.getY());
             PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
             phy.overwritePosition(new Point2D(payload.getX(), payload.getY()));
-            // System.out.println("applyRemote: " + payload.getId() + " " + payload.getX() + " " + payload.getY());
+            // System.out.println("applyRemote: " + payload.getId() + " " + payload.getX() +
+            // " " + payload.getY());
         }, Duration.ZERO);
     }
 

@@ -52,6 +52,8 @@ public class Config {
 
     // 登入後設定的 token / matchId（提供給 NetworkComponent
     public static MatchData matchData = new MatchData();
+    public static String player1_name = "";
+    public static String player2_name = "";
     public static String token = "";
     public static String matchId = "";
 }

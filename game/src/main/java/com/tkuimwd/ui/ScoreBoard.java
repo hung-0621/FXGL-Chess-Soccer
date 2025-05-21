@@ -1,5 +1,7 @@
 package com.tkuimwd.ui;
 
+import com.tkuimwd.Config;
+
 import com.almasb.fxgl.dsl.FXGL;
 import com.tkuimwd.api.dto.MatchData;
 
@@ -12,39 +14,29 @@ public class ScoreBoard {
 
     private final double WIDTH;
     private final double HEIGHT;
-    private final MatchData matchData;
     private final String player1_name;
     private final String player2_name;
+    private MatchData matchData;
     private int player1_score;
     private int player2_score;
 
     public ScoreBoard(double width, double height) {
         this.WIDTH = width;
         this.HEIGHT = height;
-        this.matchData = FXGL.getWorldProperties().getObject("matchData");
-        this.player1_name = FXGL.getWorldProperties().getString("p1_name");
-        this.player2_name = FXGL.getWorldProperties().getString("p2_name");
-        this.player1_score = FXGL.getWorldProperties().getInt("p1_score");
-        this.player2_score = FXGL.getWorldProperties().getInt("p2_score");
+        this.matchData = Config.matchData;
+        this.player1_name = Config.player1_name;
+        this.player2_name = Config.player2_name;
+        this.player1_score = matchData.getScore1();
+        this.player2_score = matchData.getScore2();
     }
 
     public void CreateScoreBoard() {
-        FXGL.getWorldProperties().setValue("p1_socre", matchData.getScore1());
-        FXGL.getWorldProperties().setValue("p2_socre", matchData.getScore2());
         // score board
         Text p1_name = FXGL.getUIFactoryService().newText(player1_name, Color.BLUE, 30);
         Text p2_name = FXGL.getUIFactoryService().newText(player2_name, Color.RED, 30);
         Text p1_score = FXGL.getUIFactoryService().newText("" + player1_score, Color.WHITE, 40);
         Text p2_score = FXGL.getUIFactoryService().newText("" + player2_score, Color.WHITE, 40);
         Text vs = FXGL.getUIFactoryService().newText(" VS ", Color.WHITE, 30);
-
-        p1_score.textProperty().bind(
-            FXGL.getWorldProperties().intProperty("p1_score").asString()
-        );
-
-        p2_score.textProperty().bind(
-            FXGL.getWorldProperties().intProperty("p2_score").asString()
-        );
 
         vs.setFill(Color.WHITE);
 

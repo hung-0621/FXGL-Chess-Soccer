@@ -37,12 +37,11 @@ public class Main extends GameApplication {
 
     @Override
     protected void initGameVars(Map<String, Object> vars) {
-        vars.put("token", "");
-        vars.put("matchData", new MatchData());
-        vars.put("p1_name", "Player 1");
-        vars.put("p2_name", "Player 2");
-        vars.put("p1_score", 0);
-        vars.put("p2_score", 0);
+        // vars.put("matchData", new MatchData());
+        // vars.put("p1_name", "Player 1");
+        // vars.put("p2_name", "Player 2");
+        // vars.put("p1_score", 0);
+        // vars.put("p2_score", 0);
     }
 
     @Override

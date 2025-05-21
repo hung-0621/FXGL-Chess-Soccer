@@ -119,6 +119,7 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(name -> {
                         p1Name = name;
                         System.out.println("p1Name=" + p1Name);
+                        Config.player1_name = p1Name;
                         Platform.runLater(() -> {
                             getContentRoot().getChildren().remove(p1_nameHolder);
                             p1_nameHolder = createNameHolder(250, 350, p1Name);
@@ -129,6 +130,7 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(name -> {
                         p2Name = name;
                         System.out.println("p2Name=" + p2Name);
+                        Config.player2_name = p2Name;
                         Platform.runLater(() -> {
                             getContentRoot().getChildren().remove(p2_nameHolder);
                             p2_nameHolder = createNameHolder(570, 350, p2Name);
