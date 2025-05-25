@@ -213,38 +213,35 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 sendToToken(match.getPlayer1Id(), msgToP1);
                 sendToToken(match.getPlayer2Id(), msgToP2);
 
-                System.out.println("回合已切換到: " + nextPlayerId);
-            } else if ("goal".equals(type)) {
-                String matchId = msg.get("matchId").asText();
-                MatchModel match = matchRepository.findById(matchId).orElse(null);
-                if (match == null)
-                    return;
+        System.out.println("回合已切換到: " + nextPlayerId);
+    }
 
-                // --- 1) 找出 senderToken
-                String senderToken = sessionIdToTokenMap.get(session.getId());
-                if (senderToken == null)
-                    return;
+    if ("goat".equals(type)) {
+        String matchId = msg.get("matchId").asText();
+        int score1 = msg.get("score1").asInt();
+        int score2 = msg.get("score2").asInt();
 
-                // --- 2) 把 sender 的分數加一 並存回資料庫 ---
-                if (senderToken.equals(match.getPlayer1Id())) {
-                    match.setScore1(match.getScore1() + 1);
-                } else {
-                    match.setScore2(match.getScore2() + 1);
-                }
-                matchRepository.save(match);
+        MatchModel match = matchRepository.findById(matchId).orElse(null);
+        if (match != null) {
+            match.setScore1(score1);
+            match.setScore2(score2);
+            matchRepository.save(match);
 
-                // --- 3) 廣播最新分數給雙方 FRONTEND ---
-                String scoreMsg = String.format(
-                        "{\"type\":\"goal\"}");
-                sendToToken(match.getPlayer1Id(), scoreMsg);
-                sendToToken(match.getPlayer2Id(), scoreMsg);
-            }
+        String msgToGame = String.format("{\"type\":\"goatupdate\",\"score1\":%d,\"score2\":%d}", score1, score2);
+        sendToToken(match.getPlayer1Id(), msgToGame);
+        sendToToken(match.getPlayer2Id(), msgToGame);
 
-        } catch (Exception e) {
-            System.out.println("處理訊息失敗：" + e.getMessage());
-            return;
+        System.out.println("[Goat] 比分已更新並廣播");
+    } else {
+        System.out.println("[Goat] 找不到 matchId: " + matchId);
+    }
+}
+
+    }catch (Exception e) {
+            System.out.println("處理訊息時發生錯誤: " + e.getMessage());
+            e.printStackTrace();
+            session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"處理訊息失敗\"}"));
         }
-
     }
 
     // if ("shot".equals(type)) {
@@ -371,3 +368,4 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
     // }
 }
+
