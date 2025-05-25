@@ -213,14 +213,32 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         System.out.println("回合已切換到: " + nextPlayerId);
     }
 
+    if ("goat".equals(type)) {
+        String matchId = msg.get("matchId").asText();
+        int score1 = msg.get("score1").asInt();
+        int score2 = msg.get("score2").asInt();
 
+        MatchModel match = matchRepository.findById(matchId).orElse(null);
+        if (match != null) {
+            match.setScore1(score1);
+            match.setScore2(score2);
+            matchRepository.save(match);
 
-        } catch (Exception e) {
-            System.out.println("處理訊息失敗：" + e.getMessage());
-            return;
+        String msgToGame = String.format("{\"type\":\"goatupdate\",\"score1\":%d,\"score2\":%d}", score1, score2);
+        sendToToken(match.getPlayer1Id(), msgToGame);
+        sendToToken(match.getPlayer2Id(), msgToGame);
+
+        System.out.println("[Goat] 比分已更新並廣播");
+    } else {
+        System.out.println("[Goat] 找不到 matchId: " + matchId);
+    }
+}
+
+    }catch (Exception e) {
+            System.out.println("處理訊息時發生錯誤: " + e.getMessage());
+            e.printStackTrace();
+            session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"處理訊息失敗\"}"));
         }
-
-        
     }
 
     // if ("shot".equals(type)) {
@@ -347,3 +365,4 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
     // }
 }
+
