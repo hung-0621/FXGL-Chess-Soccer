@@ -124,103 +124,127 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         try {
             // if ("send".equals(type)) {
-            //     // Extract shot message as-is
-            //     String matchId = msg.get("matchId").asText();
+            // // Extract shot message as-is
+            // String matchId = msg.get("matchId").asText();
 
-            //     // Lookup both player tokens by matchId
-            //     MatchModel match = matchRepository.findById(matchId).orElse(null);
-            //     if (match == null)
-            //         return;
+            // // Lookup both player tokens by matchId
+            // MatchModel match = matchRepository.findById(matchId).orElse(null);
+            // if (match == null)
+            // return;
 
-            //     String player1Id = match.getPlayer1Id();
-            //     String player2Id = match.getPlayer2Id();
+            // String player1Id = match.getPlayer1Id();
+            // String player2Id = match.getPlayer2Id();
 
-            //     ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
-            //     String modifiedMessage = mapper.writeValueAsString(msg);
+            // ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+            // String modifiedMessage = mapper.writeValueAsString(msg);
 
-            //     // Send the message to both players (or only to the opponent)
-            //     GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
-            //     GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+            // // Send the message to both players (or only to the opponent)
+            // GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+            // GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
 
-            //     System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+            // System.out.println("[Forwarded] shot event from " +
+            // sessionIdToTokenMap.get(session.getId()));
             // }
 
             if ("state_update".equals(type)) {
-            String rawMessage = message.getPayload();
-            String matchId = msg.get("matchId").asText();
-            MatchModel match = matchRepository.findById(matchId).orElse(null);
-            if (match == null)
-                return;
+                String rawMessage = message.getPayload();
+                String matchId = msg.get("matchId").asText();
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
 
-            // 找出目前這個 session 的 token
-            String senderToken = sessionIdToTokenMap.get(session.getId());
-            // System.out.println("senderToken = " + senderToken);
-            if (senderToken == null)
-                return;
+                // 找出目前這個 session 的 token
+                String senderToken = sessionIdToTokenMap.get(session.getId());
+                // System.out.println("senderToken = " + senderToken);
+                if (senderToken == null)
+                    return;
 
-            String opponentToken;
-            if (senderToken.equals(match.getPlayer1Id())) {
-                // System.out.println("player2Id = " + match.getPlayer2Id());
-                opponentToken = match.getPlayer2Id();
-            } else if (senderToken.equals(match.getPlayer2Id())) {
-                // System.out.println("player1Id = " + match.getPlayer1Id());
-                opponentToken = match.getPlayer1Id();
-            } else {
-                System.out.println("找不到對手的 token");
-                // 非這場對局的玩家，不處理
-                return;
+                String opponentToken;
+                if (senderToken.equals(match.getPlayer1Id())) {
+                    // System.out.println("player2Id = " + match.getPlayer2Id());
+                    opponentToken = match.getPlayer2Id();
+                } else if (senderToken.equals(match.getPlayer2Id())) {
+                    // System.out.println("player1Id = " + match.getPlayer1Id());
+                    opponentToken = match.getPlayer1Id();
+                } else {
+                    System.out.println("找不到對手的 token");
+                    // 非這場對局的玩家，不處理
+                    return;
+                }
+
+                // System.out.println(" rawMessage = " + rawMessage);
+
+                sendToToken(opponentToken, rawMessage);
+                // System.out.println("[Forwarded] state_update from " + senderToken + " to opponent " + opponentToken);
             }
 
-            System.out.println(" rawMessage = " + rawMessage);
+            // { type: "turn_done", matchId: "xxx" }
 
-            sendToToken(opponentToken, rawMessage);
-            System.out.println("[Forwarded] state_update from " + senderToken + " to opponent " + opponentToken);
-        }
+            else if ("turn_done".equals(type)) {
+                String matchId = msg.get("matchId").asText();
+                String senderToken = sessionIdToTokenMap.get(session.getId());
+                if (senderToken == null)
+                    return;
 
-        //{ type: "turn_done", matchId: "xxx" }
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
 
-        if ("turn_done".equals(type)) {
-        String matchId = msg.get("matchId").asText();
-        String senderToken = sessionIdToTokenMap.get(session.getId());
-        if (senderToken == null) return;
+                // 1. 檢查是否是當前玩家
+                if (!senderToken.equals(match.getCurrentPlayerId())) {
+                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
+                    return;
+                }
 
-        MatchModel match = matchRepository.findById(matchId).orElse(null);
-        if (match == null) return;
+                // 2. 切換回合
+                String nextPlayerId = senderToken.equals(match.getPlayer1Id())
+                        ? match.getPlayer2Id()
+                        : match.getPlayer1Id();
 
-        // 1. 檢查是否是當前玩家
-        if (!senderToken.equals(match.getCurrentPlayerId())) {
-            sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
-            return;
-        }
+                match.setCurrentPlayerId(nextPlayerId);
+                matchRepository.save(match);
 
-        // 2. 切換回合
-        String nextPlayerId = senderToken.equals(match.getPlayer1Id())
-            ? match.getPlayer2Id()
-            : match.getPlayer1Id();
+                // 3. 廣播 turn_update 給雙方 // {"type": "turn_update","yourTurn": true}
+                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer1Id().equals(nextPlayerId));
+                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer2Id().equals(nextPlayerId));
 
-        match.setCurrentPlayerId(nextPlayerId);
-        matchRepository.save(match);
+                sendToToken(match.getPlayer1Id(), msgToP1);
+                sendToToken(match.getPlayer2Id(), msgToP2);
 
-        // 3. 廣播 turn_update 給雙方  // {"type": "turn_update","yourTurn": true}
-        String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-            match.getPlayer1Id().equals(nextPlayerId));
-        String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
-            match.getPlayer2Id().equals(nextPlayerId));
+                System.out.println("回合已切換到: " + nextPlayerId);
+            } else if ("goal".equals(type)) {
+                String matchId = msg.get("matchId").asText();
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
 
-        sendToToken(match.getPlayer1Id(), msgToP1);
-        sendToToken(match.getPlayer2Id(), msgToP2);
+                // --- 1) 找出 senderToken
+                String senderToken = sessionIdToTokenMap.get(session.getId());
+                if (senderToken == null)
+                    return;
 
-        System.out.println("回合已切換到: " + nextPlayerId);
-    }
+                // --- 2) 把 sender 的分數加一 並存回資料庫 ---
+                if (senderToken.equals(match.getPlayer1Id())) {
+                    match.setScore1(match.getScore1() + 1);
+                } else {
+                    match.setScore2(match.getScore2() + 1);
+                }
+                matchRepository.save(match);
 
-
+                // --- 3) 廣播最新分數給雙方 FRONTEND ---
+                String scoreMsg = String.format(
+                        "{\"type\":\"goal\"}");
+                sendToToken(match.getPlayer1Id(), scoreMsg);
+                sendToToken(match.getPlayer2Id(), scoreMsg);
+            }
 
         } catch (Exception e) {
             System.out.println("處理訊息失敗：" + e.getMessage());
             return;
         }
 
-        
     }
 
     // if ("shot".equals(type)) {
