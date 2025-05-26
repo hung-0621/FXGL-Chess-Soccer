@@ -136,6 +136,7 @@ public class Main extends GameApplication {
     @Override
     protected void initPhysics() {
         FXGL.getPhysicsWorld().setGravity(0, 0);
+        
     }
 
     public static ScoreBoard getScoreBoard() {

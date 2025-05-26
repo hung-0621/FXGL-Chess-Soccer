@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
 import com.tkuimwd.api.API;
+import com.tkuimwd.ui.util.SourceGetter;
+import com.tkuimwd.ui.util.UiManager;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -25,26 +27,12 @@ public class JoinRoomSecne extends SubScene {
 
     public JoinRoomSecne(String token) {
         this.token = token;
-        var title = createTitle();
-        var background = createBackground();
+        var title = UiManager.createTitle(100, 100,"Join");
+        var background = UiManager.createBackground("/MainMenu.jpg");
+        var backButton = UiManager.createBackButton(50,100, getContentRoot());
         var mainBox = createMainBox();
-        var backButton = createBackButton();
 
         getContentRoot().getChildren().addAll(background, title, mainBox, backButton);
-    }
-
-    private Text createTitle() {
-        Text title = FXGL.getUIFactoryService().newText("Join", Color.WHITE, 40);
-        title.setTranslateX(100);
-        title.setTranslateY(100);
-        return title;
-    }
-
-    private ImageView createBackground() {
-        ImageView background = Util.getImageView();
-        background.setFitWidth(Config.WIDTH);
-        background.setFitHeight(Config.HEIGHT);
-        return background;
     }
 
     private VBox createMainBox() {
@@ -64,20 +52,6 @@ public class JoinRoomSecne extends SubScene {
         return mainBox;
     }
 
-    private Text createBackButton() {
-        Text backButton = new Text("🔙");
-        backButton.setTranslateX(50);
-        backButton.setTranslateY(100);
-        backButton.setFill(Color.WHITE);
-        backButton.setFont(FXGL.getUIFactoryService().newFont(30));
-        backButton.setOnMouseClicked(e -> {
-            Util.runLeaveAnimation(getContentRoot(), () -> {
-                FXGL.getSceneService().popSubScene(); // main
-            });
-        });
-        return backButton;
-    }
-
     private void onSubmit(String roomCode, String token) {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("roomCode", roomCode);
@@ -87,14 +61,14 @@ public class JoinRoomSecne extends SubScene {
                     if (info != null) {
                         String code = info.substring(7, info.length());
                         System.out.println("roomCode:" + code);
-                        Util.runLeaveAnimation(getContentRoot(), () -> {
+                        SourceGetter.runLeaveAnimation(getContentRoot(), () -> {
                             FXGL.getSceneService().pushSubScene(new CreateRoomScene(false, code,null, token));
                         });
                     }
                 }).exceptionally((e) -> {
                     Platform.runLater(() -> {
                         FXGL.getDialogService().showErrorBox("加入房間失敗", () -> {
-                            Util.runLeaveAnimation(getContentRoot(), () -> {
+                            SourceGetter.runLeaveAnimation(getContentRoot(), () -> {
                                 FXGL.getSceneService().popSubScene(); // main
                             });
                         });
