@@ -22,14 +22,14 @@ public class FootBallComponent extends Component {
         physics = getEntity().getComponent(PhysicsComponent.class);
     }
 
-    // @Override
-    // public void onUpdate(double tpf) {
+    @Override
+    public void onUpdate(double tpf) {
 
-    //     speed = physics.getLinearVelocity();
+        speed = physics.getLinearVelocity();
 
-    //     if (speed.magnitude() > 0 && speed.magnitude() < 30) {
-    //         physics.setLinearVelocity(Point2D.ZERO);
-    //     }
+        if (speed.magnitude() > 0 && speed.magnitude() < 30) {
+            physics.setLinearVelocity(Point2D.ZERO);
+        }
 
     //     // 避免貼牆
     //     Point2D ballCenter = getEntity().getCenter();
@@ -79,10 +79,14 @@ public class FootBallComponent extends Component {
     //                 .multiply(30);
     //         physics.setLinearVelocity(nudge);
     //     }
-    // }
+    }
 
     public String getId() {
         return id;
+    }
+
+    public double getRedius(){
+        return getEntity().getBoundingBoxComponent().getWidth() / 2;
     }
 
 }

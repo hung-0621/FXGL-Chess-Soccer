@@ -25,7 +25,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.tkuimwd.api.dto.StateUpdate;
 import com.tkuimwd.event.ChessReleaseEvent;
+import com.tkuimwd.event.GoalEvent;
 import com.tkuimwd.type.EntityType;
+import com.tkuimwd.ui.MainMenu;
 import com.tkuimwd.ui.ScoreBoard;
 
 import javafx.application.Platform;
@@ -47,6 +49,7 @@ public class NetworkComponent extends Component {
     private ObjectMapper mapper = new ObjectMapper();
     private Map<String, Entity> idMap = new HashMap<>();
     private int tick = 0;
+    private boolean goalScored = false;
     private boolean isMyTurn;
 
     private MatchData matchData = Config.matchData;
@@ -113,6 +116,7 @@ public class NetworkComponent extends Component {
                         this.ws = ws;
                         System.out.println("[Network] WS 已連線");
                         // createListener();
+                        createGoalListener();
                     }
                 });
     }
@@ -132,6 +136,27 @@ public class NetworkComponent extends Component {
     // });
     // }
 
+    private void createGoalListener() {
+        System.out.println("監聽事件: GoalEvent.GOAL");
+        FXGL.getEventBus().addEventHandler(GoalEvent.GOAL, e -> {
+            boolean wasMyTurn = isMyTurn; // 鎖定避免重送
+            goalScored = true;
+
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                applyReset();
+            }, Duration.ZERO);
+
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                if (wasMyTurn) {
+                    sendGoal();
+                } else {
+                    goalScored = false; // 如果不是我的回合，則不發送進球訊息
+                }
+            }, Duration.seconds(0.5));
+
+        });
+    }
+
     // private void sendCommand(ShotCommand shotcommand) {
     // if (ws != null && !ws.isOutputClosed()) {
     // ObjectNode msg = mapper.createObjectNode()
@@ -150,7 +175,7 @@ public class NetworkComponent extends Component {
         if (!update.getStates().isEmpty()) {
             tick++;
             sendStateUpdate(update);
-        } else if (update.getStates().isEmpty() && tick > 0) {
+        } else if (!goalScored && update.getStates().isEmpty() && tick > 0) {
             tick = 0;
             sendTurnDone();
         }
@@ -186,8 +211,7 @@ public class NetworkComponent extends Component {
             msg.put("tick", update.getTick());
             msg.set("payload", mapper.valueToTree(update.getStates()));
             ws.sendText(msg.toString(), true);
-
-            System.out.println("sendStateUpdate: " + msg.toString());
+            // System.out.println("sendStateUpdate: " + msg.toString());
         }
     }
 
@@ -199,6 +223,17 @@ public class NetworkComponent extends Component {
             ws.sendText(msg.toString(), true);
 
             System.out.println("=== TurnDone ===");
+        }
+    }
+
+    private void sendGoal() {
+        if (ws != null && ws.isOutputClosed() == false) {
+            ObjectNode msg = mapper.createObjectNode();
+            msg.put("type", "goal");
+            msg.put("matchId", matchData.getId());
+            msg.put("playerToken", playerToken);
+            ws.sendText(msg.toString(), true);
+            System.out.println("=== Goal ===");
         }
     }
 
@@ -237,24 +272,64 @@ public class NetworkComponent extends Component {
                     // 處理回合結束的邏輯
                     isMyTurn = root.get("yourTurn").asBoolean();
                     Config.isMyTurn = isMyTurn;
-                    API.getMatchInfo(Config.matchId)
+                    API.getMatchInfoById(matchData.getId())
                             .thenAccept(matchInfo -> {
                                 if (matchInfo != null && matchInfo.getMatchStatus().equals("playing")) {
+                                    Config.matchData = matchInfo;
                                     matchData = matchInfo;
+
+                                    Platform.runLater(() -> {
+                                        // 更新board
+                                        Main.getScoreBoard().updateScoreBoard();
+                                        // 更新 UI
+                                        if (isMyTurn) {
+                                            unlockChess();
+                                        } else {
+                                            lockChess();
+                                        }
+                                    });
                                 }
                             })
                             .exceptionally(ex -> {
                                 ex.printStackTrace();
                                 return null;
                             });
-                    Main.getScoreBoard().updateScoreBoard();
+                } else if ("goal_update".equals(root.get("type").asText())) {
+                    int score1 = root.get("score1").asInt();
+                    int score2 = root.get("score2").asInt();
+                    Config.matchData.setScore1(score1);
+                    Config.matchData.setScore2(score2);
+                    System.out.println("[Network] Goal Update: " + score1 + " - " + score2);
+                    FXGL.getGameTimer().runOnceAfter(() -> {
+                        Main.getScoreBoard().showGoal();
 
-                    if (isMyTurn) {
-                        unlockChess();
-                    } else {
-                        lockChess();
-                    }
+                    }, Duration.ZERO);
+
+                    FXGL.getGameTimer().runOnceAfter(() -> {
+                        if (score1 >= 2 || score2 >= 2) {
+                            // 如果有一方得分達到2分，則結束遊戲
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("[遊戲結束]");
+                            sb.append((score1 > score2 ? Config.player1_name : Config.player2_name) + " 獲勝！");
+                            Platform.runLater(() -> {
+                                FXGL.getDialogService().showMessageBox(
+                                        sb.toString(),
+                                        () -> {
+                                            // 回到主選單
+                                            FXGL.getSceneService().pushSubScene(new MainMenu());
+                                        });
+                            });
+                        } else {
+                            // 重置棋子位置
+                            applyReset();
+                            unlockChess();
+
+                        }
+                        goalScored = false;
+                        // Main.getScoreBoard().updateScoreBoard();
+                    }, Duration.seconds(1));
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -282,7 +357,18 @@ public class NetworkComponent extends Component {
             }
 
             PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
-            phy.overwritePosition(new Point2D(payload.getX(), payload.getY()));
+            if (e.hasComponent(ChessComponent.class)) {
+                ChessComponent component = e.getComponent(ChessComponent.class);
+                phy.overwritePosition(
+                        new Point2D(payload.getX() - component.getRedius(), payload.getY() - component.getRedius()));
+            } else if (e.hasComponent(FootBallComponent.class)) {
+                FootBallComponent component = e.getComponent(FootBallComponent.class);
+                phy.overwritePosition(
+                        new Point2D(payload.getX() - component.getRedius(), payload.getY() - component.getRedius()));
+            } else {
+                System.err.println("[Network] 實體不是棋子或足球");
+                return;
+            }
             // System.out.println("applyRemote: " + payload.getId() + " " + payload.getX() +
             // " " + payload.getY());
         }, Duration.ZERO);
@@ -290,23 +376,39 @@ public class NetworkComponent extends Component {
 
     // 用來處理進球後重置初始位置
     private void applyReset() {
-        double[][] pi_chess_position = Config.player1_chess_position;
-        double[][] p2_chess_position = Config.player2_chess_position;
-        Point2D football_position = Config.FOOTBALL_POSITION;
+        double[][] p1 = Config.player1_chess_position;
+        double[][] p2 = Config.player2_chess_position;
+        Point2D fb = Config.FOOTBALL_POSITION;
 
         idMap.forEach((id, e) -> {
+            PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
+            Point2D target;
+
             if (id.startsWith("p1_chess")) {
-                int index = Integer.parseInt(id.substring(9));
-                e.setPosition(pi_chess_position[index][0], pi_chess_position[index][1]);
-                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+                int idx = Integer.parseInt(id.substring(9));
+                target = new Point2D(p1[idx][0], p1[idx][1]);
             } else if (id.startsWith("p2_chess")) {
-                int index = Integer.parseInt(id.substring(9));
-                e.setPosition(p2_chess_position[index][0], p2_chess_position[index][1]);
-                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+                int idx = Integer.parseInt(id.substring(9));
+                target = new Point2D(p2[idx][0], p2[idx][1]);
             } else if (id.equals("football")) {
-                e.setPosition(football_position.getX(), football_position.getY());
-                e.getComponent(PhysicsComponent.class).setLinearVelocity(0, 0);
+                target = fb;
+            } else {
+                return;
             }
+
+            phy.setBodyType(BodyType.KINEMATIC);
+            phy.setLinearVelocity(0, 0);
+
+            if (e.hasComponent(ChessComponent.class)) {
+                ChessComponent chessComponent = e.getComponent(ChessComponent.class);
+                double redius = chessComponent.getRedius();
+                target = new Point2D(target.getX() - redius, target.getY() - redius);
+            } else if (e.hasComponent(FootBallComponent.class)) {
+                FootBallComponent footBallComponent = e.getComponent(FootBallComponent.class);
+                double redius = footBallComponent.getRedius();
+                target = new Point2D(target.getX() - redius, target.getY() - redius);
+            }
+            phy.overwritePosition(target);
         });
     }
 

@@ -175,7 +175,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 // System.out.println(" rawMessage = " + rawMessage);
 
                 sendToToken(opponentToken, rawMessage);
-                // System.out.println("[Forwarded] state_update from " + senderToken + " to opponent " + opponentToken);
+                // System.out.println("[Forwarded] state_update from " + senderToken + " to
+                // opponent " + opponentToken);
             }
 
             // { type: "turn_done", matchId: "xxx" }
@@ -213,35 +214,41 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 sendToToken(match.getPlayer1Id(), msgToP1);
                 sendToToken(match.getPlayer2Id(), msgToP2);
 
-        System.out.println("回合已切換到: " + nextPlayerId);
-    }
+                System.out.println("回合已切換到: " + nextPlayerId);
+            } else if ("goal".equals(type)) {
+                String matchId = msg.get("matchId").asText();
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null) {
+                    System.out.println("[Goal] 找不到 matchId: " + matchId);
+                    return;
+                }
 
-    if ("goat".equals(type)) {
-        String matchId = msg.get("matchId").asText();
-        int score1 = msg.get("score1").asInt();
-        int score2 = msg.get("score2").asInt();
+                // 1) 找出是誰進球
+                String senderToken = msg.get("playerToken").asText();
+                if (senderToken == null)
+                    return;
 
-        MatchModel match = matchRepository.findById(matchId).orElse(null);
-        if (match != null) {
-            match.setScore1(score1);
-            match.setScore2(score2);
-            matchRepository.save(match);
+                // 2) 分數 + 1
+                if (senderToken.equals(match.getPlayer1Id())) {
+                    match.setScore1(match.getScore1() + 1);
+                } else {
+                    match.setScore2(match.getScore2() + 1);
+                }
+                matchRepository.save(match);
 
-        String msgToGame = String.format("{\"type\":\"goatupdate\",\"score1\":%d,\"score2\":%d}", score1, score2);
-        sendToToken(match.getPlayer1Id(), msgToGame);
-        sendToToken(match.getPlayer2Id(), msgToGame);
+                // 3) 廣播最新分數給雙方
+                String scoreMsg = String.format(
+                        "{\"type\":\"goal_update\",\"matchId\":\"%s\",\"score1\":%d,\"score2\":%d}",
+                        matchId, match.getScore1(), match.getScore2());
+                sendToToken(match.getPlayer1Id(), scoreMsg);
+                sendToToken(match.getPlayer2Id(), scoreMsg);
+            }
 
-        System.out.println("[Goat] 比分已更新並廣播");
-    } else {
-        System.out.println("[Goat] 找不到 matchId: " + matchId);
-    }
-}
-
-    }catch (Exception e) {
-            System.out.println("處理訊息時發生錯誤: " + e.getMessage());
-            e.printStackTrace();
-            session.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"處理訊息失敗\"}"));
+        } catch (Exception e) {
+            System.out.println("處理訊息失敗：" + e.getMessage());
+            return;
         }
+
     }
 
     // if ("shot".equals(type)) {
@@ -368,4 +375,3 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // }
     // }
 }
-

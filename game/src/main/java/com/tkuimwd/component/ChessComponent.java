@@ -99,6 +99,10 @@ public class ChessComponent extends Component {
         return id;
     }
 
+    public double getRedius(){
+        return chess.getRadius();
+    }
+
     public void setLock(){
         // chess.setDisable(true);
         chess.setMouseTransparent(true);

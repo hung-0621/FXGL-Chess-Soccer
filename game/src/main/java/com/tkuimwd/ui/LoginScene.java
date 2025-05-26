@@ -119,7 +119,7 @@ public class LoginScene extends SubScene {
         node.put("password", pass);
         API.getLoginInfo(node)
                 .thenAccept(token -> {
-                    if (token != null) {
+                    if (!token.isEmpty()) {
 
                         // 儲存 token 進 Config
                         Config.token = token;

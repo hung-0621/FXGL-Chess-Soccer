@@ -102,4 +102,10 @@ public class Fetch {
     public static CompletableFuture<String> getMatchInfoByRoomId (String id) {
         return get("/match/room/" + id);
     }
+
+    public static CompletableFuture<String> getMatchInfoById (String id) {
+        return get("/match/" + id);
+    }
+
+    
 }

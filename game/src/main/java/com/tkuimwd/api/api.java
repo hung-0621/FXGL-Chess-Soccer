@@ -228,4 +228,25 @@ public class API {
                 });
     }
 
+    public static CompletableFuture<MatchData> getMatchInfoById(String matchId) {
+        return Fetch.getMatchInfoById(matchId)
+                .thenApply(response -> {
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        MatchData matchData = mapper.readValue(response, MatchData.class);
+                        System.out.println("取得對局資訊成功: " + matchData.toString());
+                        return matchData;
+                    } catch (JsonProcessingException e) {
+                        System.out.println("取得對局資訊失敗");
+                        e.printStackTrace();
+                        return null;
+                    }
+                })
+                .exceptionally(ex -> {
+                    System.out.println("取得對局資訊失敗");
+                    ex.printStackTrace();
+                    return null;
+                });
+    }
+
 }

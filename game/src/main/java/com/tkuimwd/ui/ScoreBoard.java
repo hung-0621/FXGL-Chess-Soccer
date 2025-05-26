@@ -31,6 +31,7 @@ public class ScoreBoard {
     private Text p2_score;
     private Text p1_turn;
     private Text p2_turn;
+    private Text vs;
 
     public ScoreBoard(double width, double height) {
         this.WIDTH = width;
@@ -48,15 +49,14 @@ public class ScoreBoard {
 
     public void CreateScoreBoard() {
         // score board
-        p1_name = FXGL.getUIFactoryService().newText(player1_name, Color.WHITE, 40);
-        p2_name = FXGL.getUIFactoryService().newText(player2_name, Color.WHITE, 40);
+        p1_name = FXGL.getUIFactoryService().newText(player1_name, Color.WHITE, 30);
+        p2_name = FXGL.getUIFactoryService().newText(player2_name, Color.WHITE, 30);
         p1_score = FXGL.getUIFactoryService().newText("", Color.WHITE, 40);
         p2_score = FXGL.getUIFactoryService().newText("", Color.WHITE, 40);
         p1_turn = FXGL.getUIFactoryService().newText("", Color.WHITE, 20);
         p2_turn = FXGL.getUIFactoryService().newText("", Color.WHITE, 20);
 
-        Text vs = FXGL.getUIFactoryService().newText(" VS ", Color.WHITE, 30);
-        vs.setFill(Color.WHITE);
+        vs = FXGL.getUIFactoryService().newText(" VS ", Color.WHITE, 30);
 
         // main
         HBox pane = new HBox();
@@ -77,8 +77,11 @@ public class ScoreBoard {
     }
 
     public void updateScoreBoard() {
-        p1_score.setText("" + matchData.getScore1());
-        p2_score.setText("" + matchData.getScore2());
+        p1_name.setText(player1_name);
+        p2_name.setText(player2_name);
+        p1_score.setText("" + Config.matchData.getScore1());
+        p2_score.setText("" + Config.matchData.getScore2());
+        vs.setText(" VS ");
 
         if (Config.isHost && Config.isMyTurn) {
             p1_turn.setText("Your Turn");
@@ -95,5 +98,15 @@ public class ScoreBoard {
             p1_turn.setText("Your Turn");
             p2_turn.setText("Waiting...");
         }
+    }
+
+    public void showGoal(){
+        p1_name.setText("");
+        p2_name.setText("");
+        p1_score.setText("");
+        p2_score.setText("");
+        p1_turn.setText("");
+        p2_turn.setText("");
+        vs.setText("GOAL");
     }
 }
