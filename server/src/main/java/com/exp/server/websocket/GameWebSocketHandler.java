@@ -223,16 +223,16 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     return;
                 }
 
-                // 1) 找出是誰進球
                 String senderToken = msg.get("playerToken").asText();
                 if (senderToken == null)
                     return;
 
-                // 2) 分數 + 1
-                if (senderToken.equals(match.getPlayer1Id())) {
-                    match.setScore1(match.getScore1() + 1);
-                } else {
+                String goalId = msg.get("goalId").asText();
+                // 分數 + 1
+                if (goalId.equals("Goal1")) {
                     match.setScore2(match.getScore2() + 1);
+                } else if (goalId.equals("Goal2")) {
+                    match.setScore1(match.getScore1() + 1);
                 }
                 matchRepository.save(match);
 

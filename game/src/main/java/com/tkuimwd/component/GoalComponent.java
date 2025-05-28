@@ -9,8 +9,13 @@ import com.tkuimwd.type.EntityType;
 
 public class GoalComponent extends Component {
 
+    private String id; // 球門ID
     private Entity football;
     private boolean score;
+
+    public GoalComponent(String id) {
+        this.id = id;
+    }
 
     @Override
     public void onAdded() {
@@ -25,7 +30,7 @@ public class GoalComponent extends Component {
         }
         
         if (isGoal(football)){
-            FXGL.getEventBus().fireEvent(new GoalEvent());
+            FXGL.getEventBus().fireEvent(new GoalEvent(id));
         }
     }
 
