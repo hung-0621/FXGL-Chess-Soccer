@@ -34,11 +34,6 @@ public class MainMenu extends FXGLMenu {
                 this.token = token;
         }
 
-        @Override
-        public void onCreate() {
-
-        }
-
         private void initUI() {
                 var background = getBackground();
                 var title = createTitle();

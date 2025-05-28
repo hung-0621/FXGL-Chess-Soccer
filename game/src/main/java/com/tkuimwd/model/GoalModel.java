@@ -3,14 +3,20 @@ package com.tkuimwd.model;
 import javafx.geometry.Point2D;
 
 public class GoalModel {
+    private String id;
     private Point2D position; // 左上座標
     private double width;
     private double height;
 
-    public GoalModel(Point2D position, double width, double height) {
+    public GoalModel(String id, Point2D position, double width, double height) {
+        this.id = id;
         this.position = position;
         this.width = width;
         this.height = height;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public Point2D getPosition() {

@@ -88,8 +88,8 @@ public class Main extends GameApplication {
         FootBallModel footBallModel = new FootBallModel("football", FOOTBALL_POSITION);
         ChessModel[] p1_chess_model_list = new ChessModel[P1_CHESS_POSITION.length];
         ChessModel[] p2_chess_model_list = new ChessModel[P2_CHESS_POSITION.length];
-        GoalModel p1_goal_model = new GoalModel(P1_GOAL_POSITION, GOAL_WIDTH, GOAL_HEIGHT);
-        GoalModel p2_goal_model = new GoalModel(P2_GOAL_POSITION, GOAL_WIDTH, GOAL_HEIGHT);
+        GoalModel p1_goal_model = new GoalModel("Goal1", P1_GOAL_POSITION, GOAL_WIDTH, GOAL_HEIGHT);
+        GoalModel p2_goal_model = new GoalModel("Goal2", P2_GOAL_POSITION, GOAL_WIDTH, GOAL_HEIGHT);
 
         for (int i = 0; i < P1_CHESS_POSITION.length; i++) {
             String id = "p1_chess_" + i;
@@ -136,7 +136,54 @@ public class Main extends GameApplication {
     @Override
     protected void initPhysics() {
         FXGL.getPhysicsWorld().setGravity(0, 0);
-        
+        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(
+                EntityType.FOOTBALL, EntityType.WALL) {
+
+            @Override
+            protected void onCollisionBegin(Entity ball, Entity wall) {
+                PhysicsComponent phy = ball.getComponent(PhysicsComponent.class);
+                Point2D v = phy.getLinearVelocity();
+
+                var bbBall = ball.getBoundingBoxComponent();
+                var bbWall = wall.getBoundingBoxComponent();
+
+                double ballLeft = bbBall.getMinXWorld();
+                double ballRight = bbBall.getMaxXWorld();
+                double ballTop = bbBall.getMinYWorld();
+                double ballBottom = bbBall.getMaxYWorld();
+
+                double wallLeft = bbWall.getMinXWorld();
+                double wallRight = bbWall.getMaxXWorld();
+                double wallTop = bbWall.getMinYWorld();
+                double wallBottom = bbWall.getMaxYWorld();
+                System.out.println("Ball: " + ballLeft + ", " + ballRight + ", " + ballTop + ", " + ballBottom);
+                System.out.println("Wall: " + wallLeft + ", " + wallRight + ", " + wallTop + ", " + wallBottom);
+
+                double eps = 1e-6;
+
+                // 左牆
+                if (ballLeft <= wallLeft + eps) {
+                    phy.setLinearVelocity(Math.abs(v.getX()), v.getY());
+                    System.out.println("Hit left wall");
+                }
+                // 右牆
+                else if (ballRight >= wallRight - eps) {
+                    phy.setLinearVelocity(-Math.abs(v.getX()), v.getY());
+                    System.out.println("Hit right wall");
+                }
+                // 上牆
+                else if (ballTop <= wallTop + eps) {
+                    phy.setLinearVelocity(v.getX(), Math.abs(v.getY()));
+                    System.out.println("Hit top wall");
+                }
+                // 下牆
+                else if (ballBottom >= wallBottom - eps) {
+                    phy.setLinearVelocity(v.getX(), -Math.abs(v.getY()));
+                    System.out.println("Hit bottom wall");
+                }
+            }
+        });
+
     }
 
     public static ScoreBoard getScoreBoard() {

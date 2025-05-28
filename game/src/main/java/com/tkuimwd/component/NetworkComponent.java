@@ -106,6 +106,7 @@ public class NetworkComponent extends Component {
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
                 .buildAsync(
+                        // URI.create("ws://192.168.1.26:8080/ws/game?token=" + playerToken),
                         URI.create("ws://localhost:8080/ws/game?token=" + playerToken),
                         new WSListener())
                 .whenComplete((ws, err) -> {
@@ -139,6 +140,8 @@ public class NetworkComponent extends Component {
     private void createGoalListener() {
         System.out.println("監聽事件: GoalEvent.GOAL");
         FXGL.getEventBus().addEventHandler(GoalEvent.GOAL, e -> {
+            String goalId = e.getId();
+            System.out.println("goalId: " + goalId);
             boolean wasMyTurn = isMyTurn; // 鎖定避免重送
             goalScored = true;
 
@@ -148,7 +151,7 @@ public class NetworkComponent extends Component {
 
             FXGL.getGameTimer().runOnceAfter(() -> {
                 if (wasMyTurn) {
-                    sendGoal();
+                    sendGoal(goalId);
                 } else {
                     goalScored = false; // 如果不是我的回合，則不發送進球訊息
                 }
@@ -226,12 +229,13 @@ public class NetworkComponent extends Component {
         }
     }
 
-    private void sendGoal() {
+    private void sendGoal(String goalId) {
         if (ws != null && ws.isOutputClosed() == false) {
             ObjectNode msg = mapper.createObjectNode();
             msg.put("type", "goal");
             msg.put("matchId", matchData.getId());
             msg.put("playerToken", playerToken);
+            msg.put("goalId", goalId);
             ws.sendText(msg.toString(), true);
             System.out.println("=== Goal ===");
         }
@@ -309,14 +313,14 @@ public class NetworkComponent extends Component {
                         if (score1 >= 2 || score2 >= 2) {
                             // 如果有一方得分達到2分，則結束遊戲
                             StringBuilder sb = new StringBuilder();
-                            sb.append("[遊戲結束]");
+                            sb.append("[遊戲結束] 玩家 ");
                             sb.append((score1 > score2 ? Config.player1_name : Config.player2_name) + " 獲勝！");
                             Platform.runLater(() -> {
                                 FXGL.getDialogService().showMessageBox(
                                         sb.toString(),
                                         () -> {
                                             // 回到主選單
-                                            FXGL.getSceneService().pushSubScene(new MainMenu());
+                                            FXGL.getGameController().gotoMainMenu();
                                         });
                             });
                         } else {
