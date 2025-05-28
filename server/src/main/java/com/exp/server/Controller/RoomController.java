@@ -19,7 +19,7 @@ import com.exp.server.model.MatchModel;
 import com.exp.server.model.RoomModel;
 import com.exp.server.repository.MatchRepository;
 import com.exp.server.repository.RoomRepository;
-import com.exp.server.websocket.GameWebSocketHandler_00;
+import com.exp.server.websocket.GameWebSocketHandler;
 
 @RestController
 @RequestMapping("/room")
@@ -217,11 +217,11 @@ public class RoomController {
     );
 
     if (savedMatch.getCurrentPlayerId().equals(savedMatch.getPlayer1Id())) {
-        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer1Id(), gameStartMsg);
-        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer2Id(), guestMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), gameStartMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), guestMsg);
     } else {
-        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer2Id(), gameStartMsg);
-        GameWebSocketHandler_00.sendToToken(savedMatch.getPlayer1Id(), guestMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer2Id(), gameStartMsg);
+        GameWebSocketHandler.sendToToken(savedMatch.getPlayer1Id(), guestMsg);
     }
 
     return ResponseEntity.ok(savedMatch);

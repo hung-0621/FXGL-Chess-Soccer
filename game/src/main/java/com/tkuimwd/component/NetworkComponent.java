@@ -106,8 +106,8 @@ public class NetworkComponent extends Component {
         HttpClient.newHttpClient()
                 .newWebSocketBuilder()
                 .buildAsync(
-                        // URI.create("ws://192.168.1.26:8080/ws/game?token=" + playerToken),
-                        URI.create("ws://localhost:8080/ws/game?token=" + playerToken),
+                        URI.create("ws://192.168.1.26:8080/ws/game?token=" + playerToken),
+                        // URI.create("ws://localhost:8080/ws/game?token=" + playerToken),
                         new WSListener())
                 .whenComplete((ws, err) -> {
                     if (err != null) {
@@ -178,7 +178,7 @@ public class NetworkComponent extends Component {
         if (!update.getStates().isEmpty()) {
             tick++;
             sendStateUpdate(update);
-        } else if (!goalScored && update.getStates().isEmpty() && tick > 0) {
+        } else if (isMyTurn && !goalScored && update.getStates().isEmpty() && tick > 0) {
             tick = 0;
             sendTurnDone();
         }
