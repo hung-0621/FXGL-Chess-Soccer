@@ -2,7 +2,6 @@ package com.tkuimwd;
 
 import javafx.geometry.Point2D;
 import com.tkuimwd.api.dto.MatchData;
-import com.tkuimwd.ui.ScoreBoard;
 
 public class Config {
     public static final int HEIGHT = 748; // 遊戲場景高度 scene + board

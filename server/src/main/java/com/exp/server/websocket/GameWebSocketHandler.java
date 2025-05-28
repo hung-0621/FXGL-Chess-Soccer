@@ -234,6 +234,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 } else if (goalId.equals("Goal2")) {
                     match.setScore1(match.getScore1() + 1);
                 }
+                // if (senderToken.equals(match.getPlayer1Id())) {
+                // match.setScore1(match.getScore1() + 1);
+                // } else {
+                // match.setScore2(match.getScore2() + 1);
+                // }
                 matchRepository.save(match);
 
                 // 3) 廣播最新分數給雙方

@@ -110,6 +110,7 @@ public class NetworkComponent extends Component {
                 .newWebSocketBuilder()
                 .buildAsync(
                         URI.create("ws://192.168.1.26:8080/ws/game?token=" + playerToken),
+                        // URI.create("ws://localhost:8080/ws/game?token=" + playerToken),
                         new WSListener())
                 .whenComplete((ws, err) -> {
                     if (err != null) {
@@ -319,14 +320,14 @@ public class NetworkComponent extends Component {
                         if (score1 >= 2 || score2 >= 2) {
                             // 如果有一方得分達到2分，則結束遊戲
                             StringBuilder sb = new StringBuilder();
-                            sb.append("[遊戲結束]");
+                            sb.append("[遊戲結束] 玩家 ");
                             sb.append((score1 > score2 ? Config.player1_name : Config.player2_name) + " 獲勝！");
                             Platform.runLater(() -> {
                                 FXGL.getDialogService().showMessageBox(
                                         sb.toString(),
                                         () -> {
                                             // 回到主選單
-                                            FXGL.getSceneService().pushSubScene(new MainMenu());
+                                            FXGL.getGameController().gotoMainMenu();
                                         });
                             });
                         } else {
