@@ -27,7 +27,7 @@ public class FootBallComponent extends Component {
 
         speed = physics.getLinearVelocity();
 
-        if (speed.magnitude() > 0 && speed.magnitude() < 30) {
+        if (speed.magnitude() > 0 && speed.magnitude() < 80) {
             physics.setLinearVelocity(Point2D.ZERO);
         }
 
