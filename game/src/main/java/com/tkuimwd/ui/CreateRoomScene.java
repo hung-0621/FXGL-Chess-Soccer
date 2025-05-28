@@ -6,18 +6,16 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tkuimwd.Config;
 import com.tkuimwd.api.API;
-import com.tkuimwd.api.dto.MatchData;
+import com.tkuimwd.ui.util.UiManager;
 
 import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
 
 public class CreateRoomScene extends SubScene {
 
@@ -45,10 +43,12 @@ public class CreateRoomScene extends SubScene {
         this.hostToken = hostToken;
         this.guestToken = guestToken;
 
-        var background = createBackground();
+        Config.isHost = isHost;
+
+        var background = UiManager.createBackground("/MainMenu.jpg", new ColorAdjust(0, 0, -0.5, 0));
+        var title = UiManager.createTitle(450, 150, "Room");
+        var backButton = UiManager.createBackButton(230, 150, getContentRoot());
         var mainBox = createMainBox();
-        var title = createTitle();
-        var backButton = createBackButton();
         var p1_nameHolder = createNameHolder(250, 350, p1Name);
         var p2_nameHolder = createNameHolder(570, 350, p2Name);
         var p1_Label = createNameLabel("Player 1", 250, 350 - 5);
@@ -119,6 +119,7 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(name -> {
                         p1Name = name;
                         System.out.println("p1Name=" + p1Name);
+                        Config.player1_name = p1Name;
                         Platform.runLater(() -> {
                             getContentRoot().getChildren().remove(p1_nameHolder);
                             p1_nameHolder = createNameHolder(250, 350, p1Name);
@@ -129,6 +130,7 @@ public class CreateRoomScene extends SubScene {
                     .thenAccept(name -> {
                         p2Name = name;
                         System.out.println("p2Name=" + p2Name);
+                        Config.player2_name = p2Name;
                         Platform.runLater(() -> {
                             getContentRoot().getChildren().remove(p2_nameHolder);
                             p2_nameHolder = createNameHolder(570, 350, p2Name);
@@ -156,8 +158,20 @@ public class CreateRoomScene extends SubScene {
                             System.out.println("取得開始資訊成功: matchId=" + matchData.getId());
                             Config.matchData = matchData;
                             Config.matchId = matchData.getId();
+                            Config.isMyTurn = matchData.getCurrentPlayerId().equals(guestToken);
                             Config.token = matchData.getPlayer2Id();
-                            Platform.runLater(() -> isStarted = true);
+                            System.out.println("==== [Guest] ====");
+                            System.out.println("[CreateRoomScene] token=" + Config.token);
+                            System.out.println("[CreateRoomScene] isHost=" + Config.isHost);
+                            System.out.println("[CreateRoomScene] isMyTurn" + Config.isMyTurn);
+                            Platform.runLater(() -> {
+                                try {
+                                    Thread.sleep(50);
+                                    isStarted = true;
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            });
                         }
                     })
                     .exceptionally(ex -> {
@@ -169,16 +183,6 @@ public class CreateRoomScene extends SubScene {
 
     }
 
-    private ImageView createBackground() {
-        ImageView background = Util.getImageView();
-        background.setFitWidth(Config.WIDTH);
-        background.setFitHeight(Config.HEIGHT);
-        ColorAdjust adjust = new ColorAdjust();
-        adjust.setBrightness(-0.5);
-        background.setEffect(adjust);
-        return background;
-    }
-
     private Rectangle createMainBox() {
         Rectangle mainBox = new Rectangle(600, 500, Color.GREY);
         mainBox.setArcHeight(10);
@@ -186,28 +190,6 @@ public class CreateRoomScene extends SubScene {
         mainBox.setTranslateX(200);
         mainBox.setTranslateY(100);
         return mainBox;
-    }
-
-    private Text createTitle() {
-        Text title = FXGL.getUIFactoryService().newText("Room", Color.WHITE, 40);
-        title.setTranslateX(450);
-        title.setTranslateY(150);
-        return title;
-    }
-
-    private Text createBackButton() {
-        // todo delete room
-        Text backButton = new Text("🔙");
-        backButton.setTranslateX(230);
-        backButton.setTranslateY(150);
-        backButton.setFill(Color.WHITE);
-        backButton.setFont(FXGL.getUIFactoryService().newFont(30));
-        backButton.setOnMouseClicked(e -> {
-            Util.runLeaveAnimation(getContentRoot(), () -> {
-                FXGL.getSceneService().popSubScene();
-            });
-        });
-        return backButton;
     }
 
     private Group createNameHolder(double x, double y, String name) {
@@ -292,9 +274,19 @@ public class CreateRoomScene extends SubScene {
                             System.out.println("matchId=" + matchData.getId());
                             Config.matchData = matchData;
                             Config.matchId = matchData.getId();
+                            Config.isMyTurn = matchData.getCurrentPlayerId().equals(hostToken);
                             Config.token = matchData.getPlayer1Id();
+                            System.out.println("==== [Host] ====");
+                            System.out.println("[CreateRoomScene] token=" + Config.token);
+                            System.out.println("[CreateRoomScene] isHost=" + Config.isHost);
+                            System.out.println("[CreateRoomScene] isMyTurn=" + Config.isMyTurn);
                             Platform.runLater(() -> {
-                                isStarted = true;
+                                try {
+                                    Thread.sleep(50);
+                                    isStarted = true;
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                             });
                         } else {
                             // Platform.runLater(() -> FXGL.getDialogService().showErrorBox("無法啟動遊戲，後端回傳

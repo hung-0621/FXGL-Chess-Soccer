@@ -4,12 +4,19 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.components.BoundingBoxComponent;
+import com.tkuimwd.event.GoalEvent;
 import com.tkuimwd.type.EntityType;
 
 public class GoalComponent extends Component {
 
+    private String id;
     private Entity football;
     private boolean score;
+
+
+    public GoalComponent(String id) {
+        this.id = id;
+    }
 
     @Override
     public void onAdded() {
@@ -24,8 +31,7 @@ public class GoalComponent extends Component {
         }
         
         if (isGoal(football)){
-            System.out.println("Goal!");
-            score = true;
+            FXGL.getEventBus().fireEvent(new GoalEvent(id));
         }
     }
 

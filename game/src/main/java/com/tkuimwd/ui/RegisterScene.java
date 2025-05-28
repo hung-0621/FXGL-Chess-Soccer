@@ -1,21 +1,18 @@
 package com.tkuimwd.ui;
 
-import java.io.InputStream;
-
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.scene.SubScene;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.tkuimwd.Config;
 import com.tkuimwd.api.API;
+import com.tkuimwd.ui.util.SourceGetter;
+import com.tkuimwd.ui.util.UiManager;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -23,36 +20,12 @@ import javafx.scene.text.Text;
 public class RegisterScene extends SubScene {
 
     public RegisterScene() {
-        var background = createBackground();
-        var title = createTitle();
+        var background = UiManager.createBackground("/MainMenu.jpg");
+        var title = UiManager.createTitle(100, 100, "Register");
+        var backButton = UiManager.createBackButton(50, 100, getContentRoot());
         var RegisterForm = createRegisterFrom();
-        var backButton = createBackButton();
 
         getContentRoot().getChildren().addAll(background, title, RegisterForm, backButton);
-    }
-
-    private ImageView getImageView(String path) {
-        InputStream input = getClass().getResourceAsStream(path);
-        if (input == null) {
-            throw new IllegalStateException("找不到資源：" + path);
-        }
-        Image image = new Image(input);
-        ImageView view = new ImageView(image);
-        return view;
-    }
-
-    private ImageView createBackground() {
-        ImageView background = getImageView("/MainMenu.jpg");
-        background.setFitWidth(Config.WIDTH);
-        background.setFitHeight(Config.HEIGHT);
-        return background;
-    }
-
-    private Text createTitle() {
-        Text title = FXGL.getUIFactoryService().newText("Register", Color.WHITE, 40);
-        title.setTranslateX(100);
-        title.setTranslateY(100);
-        return title;
     }
 
     private VBox createRegisterFrom() {
@@ -103,20 +76,6 @@ public class RegisterScene extends SubScene {
         return root;
     }
 
-    private Text createBackButton() {
-        Text backButton = new Text("🔙");
-        backButton.setTranslateX(50);
-        backButton.setTranslateY(100);
-        backButton.setFill(Color.WHITE);
-        backButton.setFont(FXGL.getUIFactoryService().newFont(30));
-        backButton.setOnMouseClicked(e -> {
-            Util.runLeaveAnimation(getContentRoot(), () -> {
-                FXGL.getSceneService().popSubScene(); // main
-            });
-        });
-        return backButton;
-    }
-
     private void onSubmit(String user, String email, String pass, String confirmPass) {
         if (user.isEmpty() || email.isEmpty() || pass.isEmpty() || confirmPass.isEmpty()) {
             System.out.println("Error: 請輸入所有欄位");
@@ -146,12 +105,12 @@ public class RegisterScene extends SubScene {
                         Platform.runLater(() -> {
                             FXGL.getDialogService().showConfirmationBox("註冊成功！是否前往登入？", ans -> {
                                 if (ans) {
-                                    Util.runLeaveAnimation(getContentRoot(), () -> {
+                                    SourceGetter.runLeaveAnimation(getContentRoot(), () -> {
                                         FXGL.getSceneService().popSubScene(); // main
                                         FXGL.getSceneService().pushSubScene(new LoginScene());
                                     });
                                 } else {
-                                    Util.runLeaveAnimation(getContentRoot(), () -> {
+                                    SourceGetter.runLeaveAnimation(getContentRoot(), () -> {
                                         FXGL.getSceneService().popSubScene(); // main
                                     });
                                 }

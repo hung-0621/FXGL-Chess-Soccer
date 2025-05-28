@@ -17,7 +17,7 @@ public class GoalFactory implements EntityFactory {
     public Entity spawnGoal(SpawnData data) {
         GoalModel goalModel = data.get("goalModel");
         HitBox hitBox = new HitBox(BoundingShape.box(goalModel.getWidth(), goalModel.getHeight()));
-        GoalComponent goalComponent = new GoalComponent();
+        GoalComponent goalComponent = new GoalComponent(goalModel.getId());
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.GOAL)

@@ -123,31 +123,137 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String type = msg.get("type").asText();
 
         try {
-            if ("send".equals(type)) {
-                // Extract shot message as-is
-                String matchId = msg.get("matchId").asText();
+            // if ("send".equals(type)) {
+            // // Extract shot message as-is
+            // String matchId = msg.get("matchId").asText();
 
-                // Lookup both player tokens by matchId
+            // // Lookup both player tokens by matchId
+            // MatchModel match = matchRepository.findById(matchId).orElse(null);
+            // if (match == null)
+            // return;
+
+            // String player1Id = match.getPlayer1Id();
+            // String player2Id = match.getPlayer2Id();
+
+            // ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
+            // String modifiedMessage = mapper.writeValueAsString(msg);
+
+            // // Send the message to both players (or only to the opponent)
+            // GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
+            // GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+
+            // System.out.println("[Forwarded] shot event from " +
+            // sessionIdToTokenMap.get(session.getId()));
+            // }
+
+            if ("state_update".equals(type)) {
+                String rawMessage = message.getPayload();
+                String matchId = msg.get("matchId").asText();
                 MatchModel match = matchRepository.findById(matchId).orElse(null);
                 if (match == null)
                     return;
 
-                String player1Id = match.getPlayer1Id();
-                String player2Id = match.getPlayer2Id();
+                // 找出目前這個 session 的 token
+                String senderToken = sessionIdToTokenMap.get(session.getId());
+                // System.out.println("senderToken = " + senderToken);
+                if (senderToken == null)
+                    return;
 
-                ((com.fasterxml.jackson.databind.node.ObjectNode) msg).put("type", "shot");
-                String modifiedMessage = mapper.writeValueAsString(msg);
+                String opponentToken;
+                if (senderToken.equals(match.getPlayer1Id())) {
+                    // System.out.println("player2Id = " + match.getPlayer2Id());
+                    opponentToken = match.getPlayer2Id();
+                } else if (senderToken.equals(match.getPlayer2Id())) {
+                    // System.out.println("player1Id = " + match.getPlayer1Id());
+                    opponentToken = match.getPlayer1Id();
+                } else {
+                    System.out.println("找不到對手的 token");
+                    // 非這場對局的玩家，不處理
+                    return;
+                }
 
-                // Send the message to both players (or only to the opponent)
-                GameWebSocketHandler.sendToToken(player1Id, modifiedMessage);
-                GameWebSocketHandler.sendToToken(player2Id, modifiedMessage);
+                // System.out.println(" rawMessage = " + rawMessage);
 
-                System.out.println("[Forwarded] shot event from " + sessionIdToTokenMap.get(session.getId()));
+                sendToToken(opponentToken, rawMessage);
+                // System.out.println("[Forwarded] state_update from " + senderToken + " to
+                // opponent " + opponentToken);
             }
+
+            // { type: "turn_done", matchId: "xxx" }
+
+            else if ("turn_done".equals(type)) {
+                String matchId = msg.get("matchId").asText();
+                String senderToken = sessionIdToTokenMap.get(session.getId());
+                if (senderToken == null)
+                    return;
+
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null)
+                    return;
+
+                // 1. 檢查是否是當前玩家
+                if (!senderToken.equals(match.getCurrentPlayerId())) {
+                    sendToToken(senderToken, "{\"type\":\"error\",\"message\":\"不是你的回合\"}");
+                    return;
+                }
+
+                // 2. 切換回合
+                String nextPlayerId = senderToken.equals(match.getPlayer1Id())
+                        ? match.getPlayer2Id()
+                        : match.getPlayer1Id();
+
+                match.setCurrentPlayerId(nextPlayerId);
+                matchRepository.save(match);
+
+                // 3. 廣播 turn_update 給雙方 // {"type": "turn_update","yourTurn": true}
+                String msgToP1 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer1Id().equals(nextPlayerId));
+                String msgToP2 = String.format("{\"type\":\"turn_update\",\"yourTurn\":%s}",
+                        match.getPlayer2Id().equals(nextPlayerId));
+
+                sendToToken(match.getPlayer1Id(), msgToP1);
+                sendToToken(match.getPlayer2Id(), msgToP2);
+
+                System.out.println("回合已切換到: " + nextPlayerId);
+            } else if ("goal".equals(type)) {
+                String matchId = msg.get("matchId").asText();
+                MatchModel match = matchRepository.findById(matchId).orElse(null);
+                if (match == null) {
+                    System.out.println("[Goal] 找不到 matchId: " + matchId);
+                    return;
+                }
+
+                String senderToken = msg.get("playerToken").asText();
+                if (senderToken == null)
+                    return;
+
+                String goalId = msg.get("goalId").asText();
+                // 分數 + 1
+                if (goalId.equals("Goal1")) {
+                    match.setScore2(match.getScore2() + 1);
+                } else if (goalId.equals("Goal2")) {
+                    match.setScore1(match.getScore1() + 1);
+                }
+                // if (senderToken.equals(match.getPlayer1Id())) {
+                // match.setScore1(match.getScore1() + 1);
+                // } else {
+                // match.setScore2(match.getScore2() + 1);
+                // }
+                matchRepository.save(match);
+
+                // 3) 廣播最新分數給雙方
+                String scoreMsg = String.format(
+                        "{\"type\":\"goal_update\",\"matchId\":\"%s\",\"score1\":%d,\"score2\":%d}",
+                        matchId, match.getScore1(), match.getScore2());
+                sendToToken(match.getPlayer1Id(), scoreMsg);
+                sendToToken(match.getPlayer2Id(), scoreMsg);
+            }
+
         } catch (Exception e) {
             System.out.println("處理訊息失敗：" + e.getMessage());
             return;
         }
+
     }
 
     // if ("shot".equals(type)) {
