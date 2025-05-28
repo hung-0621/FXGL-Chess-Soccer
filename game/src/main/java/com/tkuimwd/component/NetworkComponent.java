@@ -56,6 +56,9 @@ public class NetworkComponent extends Component {
     private final String playerToken = Config.token;
     private final boolean isHost = Config.isHost;
 
+    private double stateSendAccumulator = 0; // 累積時間
+    private static final double STATE_SEND_INTERVAL = 0.016; // 16ms,60fps
+
     @Override
     public void onAdded() {
 
@@ -174,13 +177,17 @@ public class NetworkComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        StateUpdate update = collectState(tick);
-        if (!update.getStates().isEmpty()) {
-            tick++;
-            sendStateUpdate(update);
-        } else if (isMyTurn && !goalScored && update.getStates().isEmpty() && tick > 0) {
-            tick = 0;
-            sendTurnDone();
+        stateSendAccumulator += tpf;
+        if (stateSendAccumulator >= STATE_SEND_INTERVAL) {
+            StateUpdate update = collectState(tick);
+            if (!update.getStates().isEmpty()) {
+                tick++;
+                sendStateUpdate(update);
+            } else if (isMyTurn && !goalScored && update.getStates().isEmpty() && tick > 0) {
+                tick = 0;
+                sendTurnDone();
+            }
+            stateSendAccumulator = 0;
         }
     }
 

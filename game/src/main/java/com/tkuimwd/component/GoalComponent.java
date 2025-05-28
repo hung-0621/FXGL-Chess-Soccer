@@ -9,10 +9,9 @@ import com.tkuimwd.type.EntityType;
 
 public class GoalComponent extends Component {
 
-    private String id;
+    private String id; // 球門ID
     private Entity football;
     private boolean score;
-
 
     public GoalComponent(String id) {
         this.id = id;
