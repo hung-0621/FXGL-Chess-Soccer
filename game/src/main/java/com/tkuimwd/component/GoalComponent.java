@@ -11,7 +11,9 @@ public class GoalComponent extends Component {
 
     private String id; // 球門ID
     private Entity football;
-    private boolean score;
+    private boolean isScoreed;
+    private int frame;
+    private int maxFrame = 6;
 
     public GoalComponent(String id) {
         this.id = id;
@@ -19,24 +21,31 @@ public class GoalComponent extends Component {
 
     @Override
     public void onAdded() {
-        score = false;
+        isScoreed = false;
         football = FXGL.getGameWorld().getEntitiesByType(EntityType.FOOTBALL).get(0);
     }
 
     @Override
     public void onUpdate(double tpf) {
-        if (football == null || score) {
+        if (football == null || isScoreed) {
             return;
         }
-        
-        if (isGoal(football)){
-            FXGL.getEventBus().fireEvent(new GoalEvent(id));
+        if (frame < maxFrame) {
+            if (isGoal(football)) {
+                FXGL.getEventBus().fireEvent(new GoalEvent(this, id));
+                System.out.println("GoalComponent: " + id + " Goal!");
+                isScoreed = true; // 確保只觸發一次
+            }
+            frame++;
+        } else {
+            frame = 0; // 重置幀數
+
         }
     }
 
     @Override
     public void onRemoved() {
-        
+
     }
 
     // 檢查footBall是否進入Goal
@@ -47,5 +56,9 @@ public class GoalComponent extends Component {
                 && footBallBox.getMaxXWorld() <= goalBox.getMaxXWorld()
                 && footBallBox.getMinYWorld() >= goalBox.getMinYWorld()
                 && footBallBox.getMaxYWorld() <= goalBox.getMaxYWorld();
+    }
+
+    public void setIsScoreed(boolean isScoreed) {
+        this.isScoreed = isScoreed;
     }
 }

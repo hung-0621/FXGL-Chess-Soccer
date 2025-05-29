@@ -144,6 +144,7 @@ public class NetworkComponent extends Component {
         System.out.println("監聽事件: GoalEvent.GOAL");
         FXGL.getEventBus().addEventHandler(GoalEvent.GOAL, e -> {
             String goalId = e.getId();
+            GoalComponent goalEntity = e.getGoal();
             System.out.println("goalId: " + goalId);
             boolean wasMyTurn = isMyTurn; // 鎖定避免重送
             goalScored = true;
@@ -155,10 +156,11 @@ public class NetworkComponent extends Component {
             FXGL.getGameTimer().runOnceAfter(() -> {
                 if (wasMyTurn) {
                     sendGoal(goalId);
+                    goalEntity.setIsScoreed(false);
                 } else {
                     goalScored = false; // 如果不是我的回合，則不發送進球訊息
                 }
-            }, Duration.seconds(0.5));
+            }, Duration.seconds(0.8));
 
         });
     }
@@ -392,6 +394,10 @@ public class NetworkComponent extends Component {
         Point2D fb = Config.FOOTBALL_POSITION;
 
         idMap.forEach((id, e) -> {
+            if (!e.hasComponent(PhysicsComponent.class)) {
+                System.out.println("[Network] 實體沒有 PhysicsComponent: " + id);
+                return;
+            }
             PhysicsComponent phy = e.getComponent(PhysicsComponent.class);
             Point2D target;
 
